@@ -1,0 +1,102 @@
+# where to save the output
+odir: ~/an/LPi/Trains/02_allpc/data/fits
+suffix: FirstTry
+
+cfinfile: /home/mdicostanzo/an/LPi/Trains/02_allpc/data/histos/RawCF_Norm500_600.root
+mcinfile: /home/mdicostanzo/an/LPi/Trains/02_allpc/mc/histos/RawCF_Norm500_600.root
+
+fitcfs:
+-   cfpath: p02_13/sgn/hCFrew
+    fitname: FirstFit
+    fitrange: [0, 600]
+    model:  
+    -   funcname: ComplexLednicky_Singlet_doublegaussian_lambda
+        npars: 7
+        weight: 1
+        addmode: sum
+        p0: ['realscatlength', 1, -10, 10]
+        p1: ['imscatlength', 0, 0, -1]
+        p2: ['effrange', 0, 0, -1]
+        p3: ['sourcepar0', 1.4412, 1.4412, 1.4412]
+        p4: ['sourcepar1', 5.0314, 5.0314, 5.0314]
+        p5: ['sourcepar2', 0.808492, 0.808492, 0.808492]
+        p6: ['sourcepar3', 0.944066, 0.944066, 0.944066]
+        #p3: ['radius1', 1, 0, -1]
+        #p4: ['radius2', 1, 0, -1]
+        #p5: ['sourceweight', 1, 0, -1]
+        #p6: ['sourcenorm', 1, 0, -1]
+        prefitfile: null
+    -   funcname: pol3
+        npars: 4
+        weight: ['mcnorm', 1, 0, -2]
+        addmode: mult
+        p0: ['p0', 0, -10, 10]
+        p1: ['p1', 0, -10, 10]
+        p2: ['p2', 0, -10, 10]
+        p3: ['p3', 0, -10, 10]
+        prefitfile: /home/mdicostanzo/an/LPi/Trains/02_allpc/mc/histos/RawCF_Norm500_600.root
+        prefitpath: p02_13/sgn/hCFrew
+        prefitrange: [0, 600]
+        fixprefit: true
+        prefitmodel:
+        -   funcname: voigt
+            npars: 4
+            p0: ['yield', 0.15, 0, 10]
+            p1: ['mean', 205, 192.5, 212.5]
+            p2: ['sigma', 2, 2.5, 15]
+            p3: ['gamma', 1, 0., 15]    
+    -   funcname: voigt
+        npars: 4
+        weight: 1
+        addmode: sum
+        p0: ['yield', 5, 0, -100]
+        p1: ['mean', 202.5, 200, -205]
+        p2: ['sigma', 10, 2.5, -1000]
+        p3: ['gamma', 10, 0., -1000]  
+        prefitfile: null
+    #-   funcname: spline3
+    #    npars: 12
+    #    weight: 1
+    #    addmode: sum
+    #    xknots: [100, 125, 130, 140, 300, 400, 450]
+    #    prefitfile: /home/mdicostanzo/an/LPi/Analysis/SimAllMothersMerged.root
+    #    prefitpath: Pairs/hSE_2113122
+    #    prefitrange: [0, 500]
+    #    fixprefit: false
+    #    prefitmodel:
+    #    -   funcname: voigt
+    #        npars: 4
+    #        p0: ['yield', 80000, 4000, -10000]
+    #        p1: ['mean', 207.5, 202.5, 212.5]
+    #        p2: ['sigma', 100, 10, 200]
+    #        p3: ['gamma', 0, 5, -100]  
+
+#-   cfpath: p02_13/sgn/hCFrew
+#    fitname: SecondFit
+#    fitrange: [0, 600]
+#    model:  
+#    -   funcname: pol0
+#        npars: 1
+#        weight: 1
+#        addmode: sum
+#        p0: ['p01', 0.11, 10, -10]
+#        prefitfile: null    
+#    -   funcname: pol0
+#        npars: 1
+#        weight: 3
+#        addmode: sum
+#        p0: ['p021', 0.21, 10, -10]
+#        prefitfile: null    
+#    -   funcname: pol1
+#        npars: 2
+#        weight: 1
+#        addmode: sum
+#        p0: ['p0', 1, 10, -10]
+#        p1: ['p1', 0.2, 10, -10]
+#        prefitfile: null    
+#    -   funcname: pol0
+#        npars: 1
+#        weight: ['mcnorm', 1.5, 0, -2]
+#        addmode: sum
+#        p0: ['p04', 0.5, 0, -10]
+#        prefitfile: null   

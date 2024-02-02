@@ -6,9 +6,14 @@ import sys
 
 import yaml
 
+<<<<<<< HEAD
+from ROOT import TDatabasePDG, TGraphErrors
+
+=======
 from ROOT import TDatabasePDG, TGraphErrors, TH1F
 import math
 from math import sqrt
+>>>>>>> 2d36d0f (draw components in CF fitter)
 import fempy
 
 class Pair:

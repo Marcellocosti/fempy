@@ -1,0 +1,74 @@
+odir: ~/an/LPi/fits
+suffix: fitDev
+
+cfinfile: /home/mdicostanzo/an/LPi/Trains/02_allpc/data/histos/RawCF_Norm700_800.root
+mcinfile: /home/mdicostanzo/an/LPi/Trains/02_allpc/mc/histos/RawCF_Norm700_800.root
+
+fitcfs:
+-   cfpath: p02_13/sgn/hCFrew
+    fitname: LambdaPiPlus
+    fitrange: [0, 1000]
+    model:
+    -   funcname: ComplexLednicky_Singlet_doublegaussian_lambda
+        npars: 7
+        lambdagen: 0.5399
+        addmode: sum
+        onbaseline: false
+        p0: ['realscatlength', 0, -1, 1]
+        p1: ['imscatlength', 0, -1, 1]
+        p2: ['effrange', 0, 0, -1]
+        p3: ['sourcepar0', 1.4412, 1.4412, 1.4412]
+        p4: ['sourcepar1', 5.0314, 5.0314, 5.0314]
+        p5: ['sourcepar2', 0.808492, 0.808492, 0.808492]
+        p6: ['sourcepar3', 0.944066, 0.944066, 0.944066]
+        prefitfile: null
+    -   funcname: pol3
+        npars: 4
+        norm: ['bkgnorm', 1, 0, 2]
+        addmode: mult
+        isbaseline: true
+        p0: ['p0', 0, -10, 10]
+        p1: ['p1', 0, 10, -10]
+        p2: ['p2', 0, -10, 10]
+        p3: ['p3', 0, -10, 10]
+        prefitfile: /home/mdicostanzo/an/LPi/Trains/02_allpc/data/histos/RawCF_Norm700_800.root
+        prefitpath: p02_13/sgn/hCFrew
+        prefitrange: [400, 700]
+        fixprefit: true
+        prefitmodel: []
+    -   funcname: bw
+        npars: 3
+        norm: ['normsigmastar', 1, 0, 5]
+        addmode: sum
+        onbaseline: true
+        p0: ['yield', 8.5, 0, 100]
+        p1: ['mean', 202, 200, 204]
+        p2: ['gamma', 16, 0, 40]
+        prefitfile: null
+    #-   funcname: splinehistotry
+    #    norm: ['splinehistotry_norm', 0.000025, 0.00001, 0.001]
+    #    addmode: sum
+    #    onbaseline: true
+    #    histofile: /home/mdicostanzo/an/LPi/Analysis/SimAllMothersMerged.root
+    #    histopath: Pairs/hSE_2113122_NoDirectSigmaXi_smearednew
+    #    rebin: 6
+    -   funcname: spline3range
+        npars: 20
+        norm: ['splinenorm', 0.001, 0.000001, 0.001]
+        addmode: sum
+        onbaseline: true
+        xknots: [0, 40, 80, 110, 130, 150, 200, 250, 350, 500]
+        bounds: 5
+        prefitfile: /home/mdicostanzo/an/LPi/Analysis/SimAllMothersMerged.root
+        prefitpath: Pairs/hSE_2113122_NoDirectSigmaXi_smearednew
+        prefitrange: [0, 750]
+        fixprefit: true
+        prefitmodel: []
+            #-   funcname: spline3
+            #    npars: 20
+            #    xknots: [120, 150, 180, 207, 240, 280, 340, 400, 500, 550]
+            #    bounds: 3
+            #    prefitfile: /home/mdicostanzo/an/LPi/Analysis/SimAllMothersMerged.root
+            #    prefitpath: Pairs/hSE_2113122_InclDirectSigmaXi_smearednew
+            #    prefitrange: [0, 600]
+            #    fixprefit: true

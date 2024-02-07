@@ -93,14 +93,14 @@ for nFit, fitcf in enumerate(cfg['fitcfs']):
 
         # fit function parameters initialization
         initPars = []
-
+        
         if('splinehisto' in func['funcname']):
             histoFile = TFile(func['histofile'])
             splinedHisto = ChangeUnits(Load(histoFile, func['histopath']), 1000)
             if('rebin' in func):
                 splinedHisto.Rebin(func['rebin'])
             initPars = [(func['norm'][0], func['norm'][1], func['norm'][2], func['norm'][3])]
-            cfFitters[-1].AddSplineHisto(func['funcname'], splinedHisto, initPars, func['addmode'])
+            cfFitters[-1].AddSplineHisto(func['funcname'], splinedHisto, initPars, func['addmode'], func['onbaseline'])
             cSplinedHisto = TCanvas(f'cSplinedHisto_{func["funcname"]}', '', 600, 600)
             cfFitters[-1].DrawSpline(cSplinedHisto, splinedHisto)
             oFile.cd(fitcf['fitname'])
@@ -140,12 +140,12 @@ for nFit, fitcf in enumerate(cfg['fitcfs']):
                 prefitInitPars = []
                 if('spline3' in prefitFunc['funcname']):
                     for nKnot, xKnot in enumerate(prefitFunc['xknots']):
-                        print(xKnot)
+                        #print(xKnot)
                         prefitInitPars.append([f'xKnot{nKnot}', xKnot, xKnot, xKnot])
                     for nKnot, xKnot in enumerate(prefitFunc['xknots']):
                         nBin = prefitHisto.FindBin(xKnot)
                         yKnot = prefitHisto.GetBinContent(nBin)
-                        print(yKnot)
+                        #print(yKnot)
                         prefitInitPars.append([f'yKnot{nKnot}', yKnot, yKnot - (yKnot/100)*prefitFunc['bounds'], 
                                            yKnot + (yKnot/100)*prefitFunc['bounds']])
                 else: 
@@ -153,7 +153,7 @@ for nFit, fitcf in enumerate(cfg['fitcfs']):
                                        prefitFunc[f'p{iPar}'][3]) for iPar in range(prefitFunc['npars'])]
     
                 preFitters[-1].Add(prefitFunc['funcname'], prefitInitPars)
-                print('Prefit model function added')
+                #print('Prefit model function added')
     
             preFitters[-1].Fit()
             preFitters[-1].Draw(cPrefit)
@@ -193,6 +193,7 @@ for nFit, fitcf in enumerate(cfg['fitcfs']):
 
         # no prefit case
         else:
+            #print('NO PREFIT')
             if('spline3' in func['funcname']):
                 for nKnot, xKnot in enumerate(func['xknots']):
                     initPars.append([f'xKnot{nKnot}', xKnot, xKnot, xKnot])
@@ -201,44 +202,50 @@ for nFit, fitcf in enumerate(cfg['fitcfs']):
                     yKnot = prefitHisto.GetBinContent(nBin)
                     initPars.append([f'yKnot{nKnot}', yKnot, yKnot - (yKnot/100)*30, yKnot + (yKnot/100)*30])
             else:
+                #print('NO SPLINE')
+                #print(func['funcname'])
                 if('splinehisto' in func['funcname']):
                     initPars = [(['splinecoeff', 1, 0, -1])]
                 else:
                     initPars = [(func[f'p{iPar}'][0], func[f'p{iPar}'][1], func[f'p{iPar}'][2], 
                                  func[f'p{iPar}'][3]) for iPar in range(func['npars'])]
-                    print(func['funcname'] + ' N pars')
-                    print(range(func['npars']))
-                    print(func['funcname'] + ' pars')
-                    print(initPars)
+                    #print(func['funcname'] + ' N pars')
+                    #print(range(func['npars']))
+                    #print(func['funcname'] + ' pars')
+                    #print(initPars)
 
         if('lambdapar' in func):
             lambdaParam = [("lambdapar_" + func['funcname'], func['lambdapar'], 0, -1)]
             initPars = lambdaParam + initPars
-            cfFitters[-1].Add(func['funcname'], initPars, func['addmode'])
+            cfFitters[-1].Add(func['funcname'], initPars, func['addmode'], func['onbaseline'])
         if('lambdagen' in func):
             lambdaGen = [("lambda_gen_" + func['funcname'], func['lambdagen'], 0, -1)]
             initPars = lambdaGen + initPars
-            cfFitters[-1].Add(func['funcname'], initPars, func['addmode'])
+            cfFitters[-1].Add(func['funcname'], initPars, func['addmode'], func['onbaseline'])
             antiLambdaGen = [("anti_lambda_gen_coeff", 1, 0, -1)]
             antiLambdaGen.append(("anti_lambda_gen_" + func['funcname'], 1-func['lambdagen'], 0, -1))
-            cfFitters[-1].Add('pol0', antiLambdaGen, 'sum')
+            cfFitters[-1].Add('pol0', antiLambdaGen, 'sum', func['onbaseline'])
         if('norm' in func):
             normParam = [(func['norm'][0], func['norm'][1], func['norm'][2], func['norm'][3])]
-            print(normParam)
+            #print(normParam)
             initPars = normParam + initPars
-            print(initPars)
-            print('\n\n\n')
-            if(func['funcname'] == 'splinehisto'):
-                cfFitters[-1].Add('pol0', initPars, func['addmode'])
+            #print(initPars)
+            #print('\n\n\n')
+            if('splinehisto' in func['funcname']):
+                cfFitters[-1].Add('pol0', initPars, func['addmode'],  func['onbaseline'])
             else:    
-                cfFitters[-1].Add(func['funcname'], initPars, func['addmode'])
-
+                if('isbaseline' in func):
+                    if(func['isbaseline']):
+                        cfFitters[-1].AddBaseline(func['funcname'], initPars, func['addmode'])
+                    else:
+                        log.critical('Fit baseline configuration could not be loaded. Please check!')
+                else:
+                    cfFitters[-1].Add(func['funcname'], initPars, func['addmode'], func['onbaseline'])
 
     # perform the fit and save the result
     cfFitters[-1].Fit()
     cFit = TCanvas('cFit', '', 600, 600)
     cfFitters[-1].Draw(cFit)
-    cFit.SaveAs(f'./Try.pdf')
     oFile.cd(fitcf['fitname'])
     cFit.Write()
     dataCF.Write()
@@ -262,25 +269,25 @@ print(f'output saved in {oFileName}')
                 #
                 #    if('spline3' in prefitFunc['funcname']):
                 #        for nKnot, xKnot in enumerate(prefitFunc['xknots']):
-                #            print(xKnot)
+                #            #print(xKnot)
                 #            prePreInitPars.append([f'xKnot{nKnot}', xKnot, xKnot, xKnot])
                 #        for nKnot, xKnot in enumerate(prefitFunc['xknots']):
                 #            nBin = prefitHisto.FindBin(xKnot)
                 #            yKnot = prefitHisto.GetBinContent(nBin)
-                #            print(yKnot)
+                #            #print(yKnot)
                 #            prePreInitPars.append([f'yKnot{nKnot}', yKnot, yKnot - (yKnot/100)*prefitFunc['bounds'], 
                 #                                   yKnot + (yKnot/100)*prefitFunc['bounds']])
                 #    else: 
-                #        print('PREFITTINGGGG')
+                #        #print('PREFITTINGGGG')
                 #        prePreInitPars = [(prefitFunc[f'p{iPar}'][0], prefitFunc[f'p{iPar}'][1], prefitFunc[f'p{iPar}'][2], 
                 #                           prefitFunc[f'p{iPar}'][3]) for iPar in range(prefitFunc['npars'])]   
-                #    print(prefitFunc['funcname'])
-                #    print(prePreInitPars)
+                #    #print(prefitFunc['funcname'])
+                #    #print(prePreInitPars)
                 #    prePreFitters[-1].Add(prefitFunc['funcname'], prePreInitPars)
                 #    prePreFitters[-1].Fit()
                 #    cPrePrefit = TCanvas(f'cPrePrefit_{func["funcname"]}', '', 600, 600)
                 #    prePreFitters[-1].Draw(cPrePrefit)
-                #    print('DRAWN FUNCTION')
+                #    #print('DRAWN FUNCTION')
                 #    oFile.cd(fitcf['fitname'])
                 #    cPrePrefit.Write()
                 #    prePrefitRes = prePreFitters[-1].GetFunction()
@@ -293,7 +300,7 @@ print(f'output saved in {oFileName}')
                 #            prefitInitPars.append([f'yKnot{iPar}', prePrefitRes.GetParameter(iPar + nKnots), 
                 #                             prePrefitRes.GetParameter(iPar + nKnots) - (prePrefitRes.GetParameter(iPar + nKnots)/100)*prefitFunc['bounds'], 
                 #                             prePrefitRes.GetParameter(iPar + nKnots) + (prePrefitRes.GetParameter(iPar + nKnots)/100)*prefitFunc['bounds']])
-                #        print('PREFIT SPLINE')
+                #        #print('PREFIT SPLINE')
                 #    else: 
                 #        prefitInitPars = [(prefitFunc[f'p{iPar}'][0], prefitFunc[f'p{iPar}'][1], prefitFunc[f'p{iPar}'][2], 
                 #                           prefitFunc[f'p{iPar}'][3]) for iPar in range(prefitFunc['npars'])]    

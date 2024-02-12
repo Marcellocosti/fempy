@@ -1,5 +1,5 @@
 odir: ~/an/LPi/fits
-suffix: fitDev
+suffix: example
 
 cfinfile: /home/mdicostanzo/an/LPi/Trains/02_allpc/data/histos/RawCF_Norm700_800.root
 mcinfile: /home/mdicostanzo/an/LPi/Trains/02_allpc/mc/histos/RawCF_Norm700_800.root
@@ -45,13 +45,6 @@ fitcfs:
         p1: ['mean', 202, 200, 204]
         p2: ['gamma', 16, 0, 40]
         prefitfile: null
-    #-   funcname: splinehistotry
-    #    norm: ['splinehistotry_norm', 0.000025, 0.00001, 0.001]
-    #    addmode: sum
-    #    onbaseline: true
-    #    histofile: /home/mdicostanzo/an/LPi/Analysis/SimAllMothersMerged.root
-    #    histopath: Pairs/hSE_2113122_NoDirectSigmaXi_smearednew
-    #    rebin: 6
     -   funcname: spline3range
         npars: 20
         norm: ['splinenorm', 0.001, 0.000001, 0.001]
@@ -64,11 +57,3 @@ fitcfs:
         prefitrange: [0, 750]
         fixprefit: true
         prefitmodel: []
-            #-   funcname: spline3
-            #    npars: 20
-            #    xknots: [120, 150, 180, 207, 240, 280, 340, 400, 500, 550]
-            #    bounds: 3
-            #    prefitfile: /home/mdicostanzo/an/LPi/Analysis/SimAllMothersMerged.root
-            #    prefitpath: Pairs/hSE_2113122_InclDirectSigmaXi_smearednew
-            #    prefitrange: [0, 600]
-            #    fixprefit: true

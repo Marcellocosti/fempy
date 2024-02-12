@@ -10,41 +10,6 @@
 #include "TH1.h"
 #include "TMath.h"
 
-//double Pol0(double *x, double *par) { return par[0]; }
-//
-//double Pol1(double *x, double *par) { return Pol0(x, par) + par[1] * x[0]; }
-//
-//double Pol2(double *x, double *par) { return Pol1(x, par) + par[2] * pow(x[0], 2); }
-//
-//double Pol3(double *x, double *par) { return Pol2(x, par) + par[3] * pow(x[0], 3); }
-//
-//double Gaus(double *x, double *par) {
-//    double norm = 1. / TMath::Sqrt((2. * TMath::Pi())) / par[2];
-//    return norm * par[0] * TMath::Exp(-(x[0] - par[1]) * (x[0] - par[1]) / 2. / par[2] / par[2]);
-//}
-//
-//double BreitWigner(double *x, double *par) {
-//    double kstar = x[0];
-//
-//    double yield = par[0];
-//    double mean = par[1];
-//    double gamma = par[2];
-//
-//    return yield * gamma / TMath::Pi() / (gamma * gamma + (kstar - mean) * (kstar - mean));
-//}
-//
-//// Convolution of a Breit-Wigner and a gaussian
-//double Voigt(double *x, double *par) {
-//    double kstar = x[0];
-//
-//    double yield = par[0];
-//    double mean = par[1];
-//    double sigma = par[2];
-//    double gamma = par[3];
-//
-//    return  yield * TMath::Voigt(kstar - mean, sigma, gamma);
-//}
-
 class Fitter {
    public:
     Fitter(TH1 *hist, double fitRangeMin, double fitRangeMax) {

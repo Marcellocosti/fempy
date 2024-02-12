@@ -76,41 +76,6 @@ double BreitWignerKStar(double *x, double *par) {
 
 }
 
-//double BreitWignerKStar(double *x, double *par) {
-//
-//  // x[0]: k*
-//  // par: [0] "normalisation" constant
-//  //      [1] width
-//  //      [2] mass
-//
-//  double massPion = 139.57039;
-//  double massLambda = 1115.683;
-//
-//  if (x[0] < 0)
-//    return 0;
-//
-//  // double t = x[0];
-//
-//  double kstar = x[0];
-//  double Thresh = massPion + massLambda;
-//
-//  double MotherMass = sqrt(kstar * kstar + massPion * massPion) + sqrt(kstar * kstar + massLambda * massLambda);
-//
-//  if (MotherMass < Thresh)
-//    return 0;
-//
-//  double Width = par[1] * par[2] / sqrt(par[2] * par[2] - Thresh * Thresh);
-//  double arg0 = 2 * MotherMass / TMath::Pi();
-//  double arg1 = sqrt(MotherMass * MotherMass - Thresh * Thresh) * Width;
-//  double arg2 = pow(MotherMass * MotherMass - par[2] * par[2], 2.);
-//  double arg3 = pow(sqrt(MotherMass * MotherMass - Thresh * Thresh) * Width, 2.);
-//
-//  double kStarMJacobian = kstar / sqrt(kstar * kstar + massPion * massPion) + kstar / sqrt(kstar * kstar + massLambda * massLambda);
-//
-//  return (par[0] * arg0 * arg1 / (arg2 + arg3)) * abs(kStarMJacobian);
-//
-//}
-
 // Convolution of a Breit-Wigner and a gaussian
 double Voigt(double *x, double *par) {
     double kstar = x[0];
@@ -150,6 +115,18 @@ double Spline3(double *x, double *par){
     return sp3->Eval(x[0]);
 }
 
+double Spline5(double *x, double *par){
+    int numKnots = 6;
+    Double_t xKnots[numKnots];
+    Double_t yKnots[numKnots];
+    for(int iKnot=0; iKnot<numKnots; iKnot++){
+        xKnots[iKnot] = par[iKnot];
+        yKnots[iKnot] = par[numKnots+iKnot];
+    }
+    TSpline5* sp5 = new TSpline5("sp5", xKnots, yKnots, numKnots, "");
+    return sp5->Eval(x[0]);
+}
+
 double Spline3Range(double *x, double *par){
     int numKnots = 10;
     Double_t xKnots[numKnots];
@@ -175,18 +152,6 @@ double Spline3Histo(double *x, double *par){
     
     return sp3->Eval(x[0]);
 
-}
-
-double Spline5(double *x, double *par){
-    int numKnots = 6;
-    Double_t xKnots[numKnots];
-    Double_t yKnots[numKnots];
-    for(int iKnot=0; iKnot<numKnots; iKnot++){
-        xKnots[iKnot] = par[iKnot];
-        yKnots[iKnot] = par[numKnots+iKnot];
-    }
-    TSpline5* sp5 = new TSpline5("sp5", xKnots, yKnots, numKnots, "");
-    return sp5->Eval(x[0]);
 }
 
  double Landau(double *x, double *par)

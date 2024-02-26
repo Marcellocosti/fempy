@@ -26,3 +26,5 @@ build/**
 fempy.egg-info/**
 
 fempy/sim/alice3/geom/*
+
+*.root

@@ -9,6 +9,7 @@
 #include "TFitResult.h"
 #include "TH1.h"
 #include "TMath.h"
+#include "TLegend.h"
 #include "LednickyLambdaPion.cxx"
 #include "FitFunctions.cxx"
 
@@ -43,12 +44,14 @@ class CorrelationFitterNew {
     It is your responsibility to give the correct number of parameters. All fit parameters must be initialized.
     */
 
-    void Add(TString name, std::vector<std::tuple<std::string, double, double, double>> pars, std::string addmode, bool onbaseline) {
+    void Add(TString name, std::vector<std::tuple<std::string, double, double, double>> pars, std::string addmode, bool onbaseline, 
+             TString legend="ciao") {
         //cout << "Number of parameters: ";
         //cout << pars.size() << endl;
 
         fAddModes.push_back(addmode);
         fDrawOnBaseline.push_back(onbaseline);
+        fLegendEntries.push_back(legend);
 
         if (name == "pol0") {  // Constant function
             this->fFitFunc.push_back(Pol0);
@@ -100,12 +103,14 @@ class CorrelationFitterNew {
     }
 
 
-    void AddBaseline(TString name, std::vector<std::tuple<std::string, double, double, double>> pars, std::string addmode="") {
+    void AddBaseline(TString name, std::vector<std::tuple<std::string, double, double, double>> pars, std::string addmode="",
+                     TString legend="ciaobas") {
         //cout << "Number of parameters: ";
         //cout << pars.size() << endl;
         this->fBaselineIdx = fAddModes.size(); 
         fAddModes.push_back(addmode);
         fDrawOnBaseline.push_back(0);
+        fLegendEntries.push_back(legend);
 
         if (name == "pol0") {  // Constant function
             this->fBaseline = Pol0;
@@ -156,11 +161,13 @@ class CorrelationFitterNew {
         }
     }
 
-    void AddSplineHisto(TString name, TH1* splinedhisto, std::vector<std::tuple<std::string, double, double, double>> pars, std::string addmode, bool onbaseline) {
+    void AddSplineHisto(TString name, TH1* splinedhisto, std::vector<std::tuple<std::string, double, double, double>> pars, std::string addmode, bool onbaseline,
+                        TString legend="ciaospl") {
 
         this->fFitFuncComps.push_back(name);
         this->fAddModes.push_back(addmode);
         fDrawOnBaseline.push_back(onbaseline);
+        fLegendEntries.push_back(legend);
         
         this->fNPars.push_back(pars.size());
         // Save fit settings
@@ -282,6 +289,19 @@ class CorrelationFitterNew {
         return this->fFit;
     } 
 
+    void DrawLegend(TVirtualPad *pad, double lowX, double lowY, double highX, double highY) {
+        TLegend *legend = new TLegend(lowX, lowY, highX, highY);
+        legend->AddEntry(this->fFit, "Total", "l");
+        legend->AddEntry(this->fFitFuncEval.back(), fLegendEntries[fBaselineIdx].Data(), "l");
+        for(int iFunc=0; iFunc<this->fFitFunc.size() + this->fFitSplines.size() + 1; iFunc++) {
+            if(!fLegendEntries[iFunc].Contains("lambda_flat")) {
+                legend->AddEntry(this->fFitFuncEval[iFunc], fLegendEntries[iFunc].Data(), "l");
+            }
+        }
+        legend->SetBorderSize(0);
+        legend->Draw("same");
+        pad->Update();
+    }
     /*
     Define a canvas before calling this function and pass gPad as TVirtualPad
     */
@@ -294,7 +314,7 @@ class CorrelationFitterNew {
         // gPad->DrawFrame(fFitRangeMin, 0, fFitRangeMax, yMaxDraw,
         //                 Form("%s;%s;%s", this->fDataHist->GetTitle(), this->fDataHist->GetXaxis()->GetTitle(),
         //                      this->fDataHist->GetYaxis()->GetTitle()));
-        gPad->DrawFrame(fFitRangeMin, 0, fFitRangeMax, yMaxDraw, ";k^{*} (MeV/c);C(k^{*})");
+        gPad->DrawFrame(fFitRangeMin, 0, fFitRangeMax, yMaxDraw, ";k* (MeV/c);C(k*)");
         this->fFit->SetNpx(300);
         this->fFit->SetLineColor(kRed);
         this->fFit->DrawF1(fFitRangeMin+1,fFitRangeMax,"same");
@@ -445,6 +465,7 @@ class CorrelationFitterNew {
     std::vector<TF1*> fFitFuncEval;                                 // Fit components evaluated after the fitting
     std::vector<int> fNPars;                                        // Keeps track of how many parameters each function has
     std::vector<std::string> fAddModes;                             // Select mode of adding the contributions to the model
+    std::vector<TString> fLegendEntries;                            // String with function names for legend
 
     double fFitRangeMin;
     double fFitRangeMax;

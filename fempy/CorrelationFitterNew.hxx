@@ -324,7 +324,7 @@ class CorrelationFitterNew {
 
         //cout << endl << endl;
 
-        std::vector<Color_t> colors = {kMagenta + 3, kAzure + 2, kGreen, kBlue + 2, kOrange};
+        std::vector<Color_t> colors = {kMagenta + 3, kAzure + 2, kGreen, kBlue + 2, kOrange, kCyan, kBlack};
         
         int nTerms = this->fFitFunc.size() + this->fFitSplines.size() + 1;
         int nSplineComp = 0;

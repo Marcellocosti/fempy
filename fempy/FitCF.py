@@ -237,6 +237,9 @@ for nFit, fitcf in enumerate(cfg['fitcfs']):
     cFit.Write()
     dataCF.Write()
     cfFitters[-1].GetFunction().Write()
+    pdfFileName = fitcf['fitname'] + cfg["suffix"] + ".pdf"
+    pdfFilePath = os.path.join(cfg['odir'], pdfFileName) 
+    cFit.SaveAs(pdfFilePath)
 
 oFile.Close()
 print(f'output saved in {oFileName}')

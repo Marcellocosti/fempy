@@ -291,10 +291,10 @@ class CorrelationFitterNew {
         double yMaxDraw = 1.15;
 
         fDataHist->GetYaxis()->SetRangeUser(0, yMaxDraw);
-        gPad->DrawFrame(fFitRangeMin, 0, fFitRangeMax, yMaxDraw,
-                        Form("%s;%s;%s", this->fDataHist->GetTitle(), this->fDataHist->GetXaxis()->GetTitle(),
-                             this->fDataHist->GetYaxis()->GetTitle()));
-        
+        // gPad->DrawFrame(fFitRangeMin, 0, fFitRangeMax, yMaxDraw,
+        //                 Form("%s;%s;%s", this->fDataHist->GetTitle(), this->fDataHist->GetXaxis()->GetTitle(),
+        //                      this->fDataHist->GetYaxis()->GetTitle()));
+        gPad->DrawFrame(fFitRangeMin, 0, fFitRangeMax, yMaxDraw, ";k^{*} (MeV/c);C(k^{*})");
         this->fFit->SetNpx(300);
         this->fFit->SetLineColor(kRed);
         this->fFit->DrawF1(fFitRangeMin+1,fFitRangeMax,"same");

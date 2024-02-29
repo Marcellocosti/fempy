@@ -100,7 +100,7 @@ for nFit, fitcf in enumerate(cfg['fitcfs']):
             if('rebin' in func):
                 splinedHisto.Rebin(func['rebin'])
             initPars = [(func['norm'][0], func['norm'][1], func['norm'][2], func['norm'][3])]
-            cfFitters[-1].AddSplineHisto(func['funcname'], splinedHisto, initPars, func['addmode'], func['onbaseline'])
+            cfFitters[-1].AddSplineHisto(func['funcname'], splinedHisto, initPars, func['addmode'], func['onbaseline'], func['legentry'])
             cSplinedHisto = TCanvas(f'cSplinedHisto_{func["funcname"]}', '', 600, 600)
             cfFitters[-1].DrawSpline(cSplinedHisto, splinedHisto)
             oFile.cd(fitcf['fitname'])
@@ -207,32 +207,33 @@ for nFit, fitcf in enumerate(cfg['fitcfs']):
         if('lambdapar' in func):
             lambdaParam = [("lambdapar_" + func['funcname'], func['lambdapar'], 0, -1)]
             initPars = lambdaParam + initPars
-            cfFitters[-1].Add(func['funcname'], initPars, func['addmode'], func['onbaseline'])
+            cfFitters[-1].Add(func['funcname'], initPars, func['addmode'], func['onbaseline'], func['legentry'])
         if('lambdagen' in func):
             lambdaGen = [("lambda_gen_" + func['funcname'], func['lambdagen'], 0, -1)]
             initPars = lambdaGen + initPars
-            cfFitters[-1].Add(func['funcname'], initPars, func['addmode'], func['onbaseline'])
+            cfFitters[-1].Add(func['funcname'], initPars, func['addmode'], func['onbaseline'], func['legentry'])
             antiLambdaGen = [("anti_lambda_gen_coeff", 1, 0, -1)]
             antiLambdaGen.append(("anti_lambda_gen_" + func['funcname'], 1-func['lambdagen'], 0, -1))
-            cfFitters[-1].Add('pol0', antiLambdaGen, 'sum', func['onbaseline'])
+            cfFitters[-1].Add('pol0', antiLambdaGen, 'sum', func['onbaseline'], 'lambda_flat')
         if('norm' in func):
             normParam = [(func['norm'][0], func['norm'][1], func['norm'][2], func['norm'][3])]
             initPars = normParam + initPars
             if('splinehisto' in func['funcname']):
-                cfFitters[-1].Add('pol0', initPars, func['addmode'],  func['onbaseline'])
+                cfFitters[-1].Add('pol0', initPars, func['addmode'],  func['onbaseline'], func['legentry'])
             else:    
                 if('isbaseline' in func):
                     if(func['isbaseline']):
-                        cfFitters[-1].AddBaseline(func['funcname'], initPars, func['addmode'])
+                        cfFitters[-1].AddBaseline(func['funcname'], initPars, func['addmode'], func['legentry'])
                     else:
                         log.critical('Fit baseline configuration could not be loaded. Please check!')
                 else:
-                    cfFitters[-1].Add(func['funcname'], initPars, func['addmode'], func['onbaseline'])
+                    cfFitters[-1].Add(func['funcname'], initPars, func['addmode'], func['onbaseline'], func['legentry'])
 
     # perform the fit and save the result
     cfFitters[-1].Fit()
     cFit = TCanvas('cFit', '', 600, 600)
     cfFitters[-1].Draw(cFit)
+    cfFitters[-1].DrawLegend(cFit, fitcf['legcoords'][0], fitcf['legcoords'][1], fitcf['legcoords'][2], fitcf['legcoords'][3])
     oFile.cd(fitcf['fitname'])
     cFit.Write()
     dataCF.Write()

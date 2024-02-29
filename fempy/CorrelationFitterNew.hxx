@@ -203,7 +203,7 @@ class CorrelationFitterNew {
         histo->SetMarkerStyle(20);
         histo->SetMarkerColor(kBlack);
         histo->SetLineColor(kBlack);
-        histo->SetLineWidth(2);
+        histo->SetLineWidth(3);
         histo->Draw("same pe");
         pad->Update();
 
@@ -292,9 +292,13 @@ class CorrelationFitterNew {
     void DrawLegend(TVirtualPad *pad, double lowX, double lowY, double highX, double highY) {
         TLegend *legend = new TLegend(lowX, lowY, highX, highY);
         legend->AddEntry(this->fFit, "Total", "l");
-        legend->AddEntry(this->fFitFuncEval.back(), fLegendEntries[fBaselineIdx].Data(), "l");
+        legend->AddEntry(this->fFitFuncEval[0], fLegendEntries[fBaselineIdx].Data(), "l");
+        legend->AddEntry(this->fFitFuncEval[1], fLegendEntries[0].Data(), "l");
+        //legend->AddEntry(this->fFitFuncEval[1], fLegendEntries[1].Data(), "l");
+        //legend->AddEntry(this->fFitFuncEval[1], fLegendEntries[2].Data(), "l");
         for(int iFunc=0; iFunc<this->fFitFunc.size() + this->fFitSplines.size() + 1; iFunc++) {
-            if(!fLegendEntries[iFunc].Contains("lambda_flat")) {
+            cout << fBaselineIdx << iFunc << endl;
+            if(!fLegendEntries[iFunc].Contains("lambda_flat") && iFunc != fBaselineIdx && !fLegendEntries[iFunc].Contains("Lednicky")) {
                 legend->AddEntry(this->fFitFuncEval[iFunc], fLegendEntries[iFunc].Data(), "l");
             }
         }
@@ -317,6 +321,7 @@ class CorrelationFitterNew {
         gPad->DrawFrame(fFitRangeMin, 0, fFitRangeMax, yMaxDraw, ";k* (MeV/c);C(k*)");
         this->fFit->SetNpx(300);
         this->fFit->SetLineColor(kRed);
+        this->fFit->SetLineWidth(3);
         this->fFit->DrawF1(fFitRangeMin+1,fFitRangeMax,"same");
         pad->Update();
 
@@ -339,6 +344,7 @@ class CorrelationFitterNew {
         //cout << endl;
         this->fFitFuncEval.back()->SetNpx(300);
         this->fFitFuncEval.back()->SetLineColor(kGreen+1);
+        this->fFitFuncEval.back()->SetLineWidth(3);
         this->fFitFuncEval.back()->DrawF1(fFitRangeMin+1,fFitRangeMax,"same");
         pad->Update();
 
@@ -382,6 +388,7 @@ class CorrelationFitterNew {
                 
                 this->fFitFuncEval.back()->SetNpx(300);
                 this->fFitFuncEval.back()->SetLineColor(colors[iFunc]);
+                this->fFitFuncEval.back()->SetLineWidth(3);
                 this->fFitFuncEval.back()->Draw("same");
                 pad->Update();
                 //cout << "Value of component after normalization at 2 MeV: " << this->fFitFuncEval.back()->Eval(2) << endl;
@@ -407,6 +414,7 @@ class CorrelationFitterNew {
                     //cout << endl;
                     this->fFitFuncEval.back()->SetNpx(300);
                     this->fFitFuncEval.back()->SetLineColor(colors[iFunc]);
+                    this->fFitFuncEval.back()->SetLineWidth(3);
                     this->fFitFuncEval.back()->DrawF1(fFitRangeMin+1,fFitRangeMax,"same");
                     setPars += fNPars[iFunc+1];
                     nFuncComp++;
@@ -427,6 +435,7 @@ class CorrelationFitterNew {
                     //cout << endl;
                     this->fFitFuncEval.back()->SetNpx(300);
                     this->fFitFuncEval.back()->SetLineColor(colors[iFunc]);
+                    this->fFitFuncEval.back()->SetLineWidth(3);
                     this->fFitFuncEval.back()->DrawF1(fFitRangeMin+1,fFitRangeMax,"same");
                     pad->Update();
                     setPars += fNPars[iFunc+1];
@@ -446,7 +455,7 @@ class CorrelationFitterNew {
         fDataHist->SetMarkerStyle(20);
         fDataHist->SetMarkerColor(kBlack);
         fDataHist->SetLineColor(kBlack);
-        fDataHist->SetLineWidth(2);
+        fDataHist->SetLineWidth(3);
         fDataHist->Draw("same pe");
         pad->Update();
     }

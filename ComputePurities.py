@@ -218,7 +218,8 @@ if cfg['infiledata'] != '' and cfg['infiledata'] is not None:
 
             # create list of fit configuration
             fitters = []
-            cInvMass = TCanvas('cInvMass', '', 1200, 800)
+            #cInvMass = TCanvas('cInvMass', '', 1200, 800)
+            cInvMass = TCanvas('cInvMass', '', 600, 600)
             DivideCanvas(cInvMass, len(ptMins))
 
             for iPt, (ptMin, ptMax) in enumerate(zip(ptMins, ptMaxs)):

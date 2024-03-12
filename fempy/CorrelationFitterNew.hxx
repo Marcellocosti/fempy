@@ -294,15 +294,17 @@ class CorrelationFitterNew {
         legend->AddEntry(this->fFit, "Total", "l");
         legend->AddEntry(this->fFitFuncEval[0], fLegendEntries[fBaselineIdx].Data(), "l");
         legend->AddEntry(this->fFitFuncEval[1], fLegendEntries[0].Data(), "l");
+        legend->AddEntry(this->fFitFuncEval.back(), "All Simulations", "l");
         //legend->AddEntry(this->fFitFuncEval[1], fLegendEntries[1].Data(), "l");
         //legend->AddEntry(this->fFitFuncEval[1], fLegendEntries[2].Data(), "l");
-        for(int iFunc=0; iFunc<this->fFitFunc.size() + this->fFitSplines.size() + 1; iFunc++) {
-            cout << fBaselineIdx << iFunc << endl;
-            if(!fLegendEntries[iFunc].Contains("lambda_flat") && iFunc != fBaselineIdx && !fLegendEntries[iFunc].Contains("Lednicky")) {
-                legend->AddEntry(this->fFitFuncEval[iFunc], fLegendEntries[iFunc].Data(), "l");
-            }
-        }
+        //for(int iFunc=0; iFunc<this->fFitFunc.size() + this->fFitSplines.size() + 1; iFunc++) {
+        //    cout << fBaselineIdx << iFunc << endl;
+        //    if(!fLegendEntries[iFunc].Contains("lambda_flat") && iFunc != fBaselineIdx && !fLegendEntries[iFunc].Contains("Lednicky")) {
+        //        legend->AddEntry(this->fFitFuncEval[iFunc], fLegendEntries[iFunc].Data(), "l");
+        //    }
+        //}
         legend->SetBorderSize(0);
+        legend->SetTextSize(0.07);
         legend->Draw("same");
         pad->Update();
     }
@@ -350,7 +352,7 @@ class CorrelationFitterNew {
 
         //cout << endl << endl;
 
-        std::vector<Color_t> colors = {kMagenta + 3, kAzure + 2, kGreen, kBlue + 2, kOrange, kCyan, kBlack};
+        std::vector<Color_t> colors = {kBlue, kAzure + 2, kGreen, kBlue + 2, kOrange, kCyan, kBlack};
         
         int nTerms = this->fFitFunc.size() + this->fFitSplines.size() + 1;
         int nSplineComp = 0;
@@ -389,7 +391,7 @@ class CorrelationFitterNew {
                 this->fFitFuncEval.back()->SetNpx(300);
                 this->fFitFuncEval.back()->SetLineColor(colors[iFunc]);
                 this->fFitFuncEval.back()->SetLineWidth(3);
-                this->fFitFuncEval.back()->Draw("same");
+                //this->fFitFuncEval.back()->Draw("same");
                 pad->Update();
                 //cout << "Value of component after normalization at 2 MeV: " << this->fFitFuncEval.back()->Eval(2) << endl;
                 //cout << endl;
@@ -443,6 +445,21 @@ class CorrelationFitterNew {
                 }
             }
         }
+        
+        this->fFitFuncEval.push_back(new TF1("All Simulations", 
+                [&, this](double *x, double *pars) {
+                    return this->fFitFuncEval[3]->Eval(x[0]) +
+                           this->fFitFuncEval[4]->Eval(x[0]) +
+                           this->fFitFuncEval[5]->Eval(x[0]) +
+                           this->fFitFuncEval[6]->Eval(x[0]) -
+                           3*this->fFitFuncEval[0]->Eval(x[0]);
+                }, fFitRangeMin, fFitRangeMax, 0));
+
+        fFitFuncEval.back()->SetNpx(300);
+        cout << "Evaluation of the simulation function: " << fFitFuncEval.back()->Eval(2) << endl;
+        fFitFuncEval.back()->SetLineColor(kMagenta-3);
+        fFitFuncEval.back()->SetLineWidth(3);
+        fFitFuncEval.back()->DrawF1(fFitRangeMin+1,fFitRangeMax,"same");
         
         printf("size %d\n", fFitFuncEval.size());
         

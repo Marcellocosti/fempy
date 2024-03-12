@@ -382,8 +382,7 @@ class MassFitter {
         pad->cd();
         fHist->GetYaxis()->SetRangeUser(0, 1.3 * fHist->GetMaximum());
         gPad->DrawFrame(fFitRangeMin, 0, fFitRangeMax, 1.3 * fHist->GetMaximum(),
-                        Form("%s;%s;%s", this->fHist->GetTitle(), this->fHist->GetXaxis()->GetTitle(),
-                             this->fHist->GetYaxis()->GetTitle()));
+                        ";M(p#pi) (GeV/c^{2});Counts");
 
         if(fitDrawOpts.Contains('i')) {
             TLatex tl;
@@ -420,6 +419,46 @@ class MassFitter {
             padCoord = 0;
         }
         if(fitDrawOpts.Contains('s')) {
+            canvaLine->SetLineStyle(1);
+            canvaLine->SetLineWidth(3);
+            canvaLine->SetLineColor(6);
+
+            double lowBinContent = fHist->GetBinContent(fHist->FindBin(fIntLowEdge));
+            canvaLine->DrawLine(fIntLowEdge, pad->GetUymin() * padCoord + lowBinContent * lowMult,
+                                fIntLowEdge, pad->GetUymax() * 0.5 * padCoord + lowBinContent * uppMult);
+            double uppBinContent = fHist->GetBinContent(fHist->FindBin(fIntUppEdge));
+            canvaLine->DrawLine(fIntUppEdge, pad->GetUymin() * padCoord + uppBinContent * lowMult,
+                                fIntUppEdge, pad->GetUymax() * 0.5 * padCoord + uppBinContent * uppMult);
+        }
+
+        if(fitDrawOpts.Contains('d')) {
+            canvaLine->SetLineStyle(1);
+            canvaLine->SetLineWidth(3);
+            canvaLine->SetLineColor(6);
+
+            double lowBinContent = fHist->GetBinContent(fHist->FindBin(fIntLowEdge));
+            canvaLine->DrawLine(fIntLowEdge, pad->GetUymin() * padCoord + lowBinContent * lowMult,
+                                fIntLowEdge, pad->GetUymax() * 0.5 * padCoord + lowBinContent * uppMult);
+            double uppBinContent = fHist->GetBinContent(fHist->FindBin(fIntUppEdge));
+            canvaLine->DrawLine(fIntUppEdge, pad->GetUymin() * padCoord + uppBinContent * lowMult,
+                                fIntUppEdge, pad->GetUymax() * 0.5 * padCoord + uppBinContent * uppMult);
+
+            TLegend *legend = new TLegend(0.6, 0.6, 0.7, 0.7);
+            legend->AddEntry(this->fFit, "Fit function", "l");
+            legend->AddEntry(canvaLine, "Signal window", "l");
+            legend->SetBorderSize(0);
+            legend->SetTextFont(42);
+            legend->SetTextSize(0.04);
+            legend->Draw("same");
+            pad->Update();
+            TLatex tl;
+            tl.SetTextSize(0.065);
+            tl.SetTextFont(42);
+            tl.DrawLatexNDC(.15, .85, "pp #sqrt{s}=13 TeV");
+            pad->Update();
+        }
+
+        if(fitDrawOpts.Contains('l')) {
             canvaLine->SetLineStyle(1);
             canvaLine->SetLineWidth(3);
             canvaLine->SetLineColor(8);
@@ -459,29 +498,30 @@ class MassFitter {
             }
         }
 
-        this->fBkg->SetNpx(300);
-        this->fBkg->SetLineColor(kGray + 2);
-        this->fBkg->Draw("same");
+        // this->fBkg->SetNpx(300);
+        // this->fBkg->SetLineColor(kGray + 2);
+        // this->fBkg->Draw("same");
 
-        this->fSgn->SetNpx(300);
-        this->fSgn->SetLineColor(kBlue + 2);
-        this->fSgn->Draw("same");
+        // this->fSgn->SetNpx(300);
+        // this->fSgn->SetLineColor(kBlue + 2);
+        // this->fSgn->Draw("same");
 
         if (this->fSgnFuncName == "hat" || this->fSgnFuncName == "doublegaus") {
-            this->fHatThin->SetLineColor(kMagenta + 3);
-            this->fHatThin->SetNpx(300);
-            this->fHatThin->Draw("same");
+            // this->fHatThin->SetLineColor(kMagenta + 3);
+            // this->fHatThin->SetNpx(300);
+            // this->fHatThin->Draw("same");
 
-            this->fHatWide->SetNpx(300);
-            this->fHatWide->SetLineColor(kAzure + 2);
-            this->fHatWide->Draw("same");
+            // this->fHatWide->SetNpx(300);
+            // this->fHatWide->SetLineColor(kAzure + 2);
+            // this->fHatWide->Draw("same");
         } 
 
-        fPrefit->SetLineStyle(9);
-        fPrefit->SetLineColor(kGray + 2);
-        fPrefit->Draw("same");
+        // fPrefit->SetLineStyle(9);
+        // fPrefit->SetLineColor(kGray + 2);
+        // fPrefit->Draw("same");
 
         fFit->SetLineColor(kRed);
+        fFit->SetLineWidth(3);
         fFit->Draw("same");
 
         hist->SetMarkerSize(1);

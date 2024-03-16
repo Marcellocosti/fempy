@@ -291,10 +291,11 @@ class CorrelationFitterNew {
 
     void DrawLegend(TVirtualPad *pad, double lowX, double lowY, double highX, double highY) {
         TLegend *legend = new TLegend(lowX, lowY, highX, highY);
-        legend->AddEntry(this->fFit, "Total", "l");
+        legend->AddEntry(this->fDataHist, "#Lambda#pi^{#scale[1.3]{+}}#oplus #bar{#Lambda}#pi^{#scale[1.5]{-}}", "lp");
         legend->AddEntry(this->fFitFuncEval[0], fLegendEntries[fBaselineIdx].Data(), "l");
-        legend->AddEntry(this->fFitFuncEval[1], fLegendEntries[0].Data(), "l");
         legend->AddEntry(this->fFitFuncEval.back(), "All Simulations", "l");
+        legend->AddEntry(this->fFitFuncEval[1], fLegendEntries[0].Data(), "l");
+        legend->AddEntry(this->fFit, "Total", "l");
         //legend->AddEntry(this->fFitFuncEval[1], fLegendEntries[1].Data(), "l");
         //legend->AddEntry(this->fFitFuncEval[1], fLegendEntries[2].Data(), "l");
         //for(int iFunc=0; iFunc<this->fFitFunc.size() + this->fFitSplines.size() + 1; iFunc++) {
@@ -304,7 +305,7 @@ class CorrelationFitterNew {
         //    }
         //}
         legend->SetBorderSize(0);
-        legend->SetTextSize(0.07);
+        legend->SetTextSize(0.045);
         legend->Draw("same");
         pad->Update();
     }
@@ -316,11 +317,11 @@ class CorrelationFitterNew {
         //double yMaxDraw = 1.3 * fDataHist->GetMaximum();
         double yMaxDraw = 1.15;
 
-        fDataHist->GetYaxis()->SetRangeUser(0, yMaxDraw);
+        fDataHist->GetYaxis()->SetRangeUser(0.98, yMaxDraw);
         // gPad->DrawFrame(fFitRangeMin, 0, fFitRangeMax, yMaxDraw,
         //                 Form("%s;%s;%s", this->fDataHist->GetTitle(), this->fDataHist->GetXaxis()->GetTitle(),
         //                      this->fDataHist->GetYaxis()->GetTitle()));
-        gPad->DrawFrame(fFitRangeMin, 0, fFitRangeMax, yMaxDraw, ";k* (MeV/c);C(k*)");
+        gPad->DrawFrame(fFitRangeMin, 0.98, fFitRangeMax, 1.1, ";k* (MeV/c);C(k*)");
         this->fFit->SetNpx(300);
         this->fFit->SetLineColor(kRed);
         this->fFit->SetLineWidth(3);
@@ -398,21 +399,22 @@ class CorrelationFitterNew {
                 setPars += fNPars[iFunc+1];
                 nSplineComp++;
             } else {
+                cout << "Ciao" << endl;
                 //cout << fNPars[iFunc+1] << endl;
                 components.push_back(new TF1(Form("iComp_%.0f", iFunc), fFitFunc[nFuncComp], fFitRangeMin, fFitRangeMax, fNPars[iFunc+1]-1));
                 for(int iPar=1; iPar<fNPars[iFunc+1]; iPar++) {
-                    //cout << "Setting parameter: (" << iPar << "," << this->fFit->GetParameter(setPars + iPar) << "), ";
+                    cout << "Setting parameter: (" << iPar << "," << this->fFit->GetParameter(setPars + iPar) << "), " << endl;
                     components.back()->FixParameter(iPar-1, this->fFit->GetParameter(setPars + iPar));
                 }
-                //cout << "Value of raw component at 2 MeV: " << components.back()->Eval(2) << ", " << "Multiplicative factor: " << this->fFit->GetParameter(setPars) << endl;
+                cout << "Value of raw component at 2 MeV: " << components.back()->Eval(2) << ", " << "Multiplicative factor: " << this->fFit->GetParameter(setPars) << endl;
                 if(funcName.Contains("Lednicky")) {
                     this->fFitFuncEval.push_back(new TF1("model",
                             [&, this, setPars, components](double *x, double *pars) {
                                 return components.back()->Eval(x[0]);},
                             fFitRangeMin, fFitRangeMax, 0));
                     
-                    //cout << "Value of baseline at 2 MeV: " << this->fFitFuncEval[0]->Eval(2) << endl;
-                    //cout << "Value of component after normalization at 2 MeV: " << this->fFitFuncEval.back()->Eval(2) << endl;
+                    cout << "Value of baseline at 2 MeV: " << this->fFitFuncEval[0]->Eval(2) << endl;
+                    cout << "Value of component after normalization at 2 MeV: " << this->fFitFuncEval.back()->Eval(2) << endl;
                     //cout << endl;
                     this->fFitFuncEval.back()->SetNpx(300);
                     this->fFitFuncEval.back()->SetLineColor(colors[iFunc]);

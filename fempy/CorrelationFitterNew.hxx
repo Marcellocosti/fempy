@@ -21,167 +21,39 @@ class CorrelationFitterNew {
         this->fFitRangeMin = fitRangeMin;
         this->fFitRangeMax = fitRangeMax;
         this->fNPars = {0};  // The first parameter has index zero
+
+        this->fFuncMap.insert({"pol0", Pol0});
+        this->fFuncMap.insert({"pol1", Pol1});
+        this->fFuncMap.insert({"pol2", Pol2});
+        this->fFuncMap.insert({"pol3", Pol3});
+        this->fFuncMap.insert({"gaus", Gaus});
+        this->fFuncMap.insert({"bw", BreitWigner});
+        this->fFuncMap.insert({"voigt", Voigt});
+        this->fFuncMap.insert({"ComplexLednicky_Singlet_doublegaussian_lambda", ComplexLednicky_Singlet_doublegaussian_lambda});
+        this->fFuncMap.insert({"landau", Landau});
+        this->fFuncMap.insert({"sillkstar", BreitWignerKStar});
+        this->fFuncMap.insert({"spline3", Spline3});
+        this->fFuncMap.insert({"spline3range", Spline3Range});
     }
 
-    /*
-    Add a term to the CF model. Available options:
-        - pol0
-        - bw (Breit-Wigner)
-
-    In pyroot, the fit parameters (pars) are specified as a list of tuples.
-
-    The syntax is: `(name, initialValue, lowerLim, upperLim)`. To fix a parameter set `lowerLim > upperLim`, e.g
-    `fitter.Add('bw',
-    [('p0', 0.9, 1, -1)])`
-
-    Example:
-    ```fitter.Add('bw', [
-        ('yield', 0.03, 0.001, 0.1),
-        ('mean', 0.126, 0.125, 0.127),
-        ('gamma', 0.004, 0.003, 0.005),
-    ])```
-
-    It is your responsibility to give the correct number of parameters. All fit parameters must be initialized.
-    */
-
-    void Add(TString name, std::vector<std::tuple<std::string, double, double, double>> pars, std::string addmode, bool onbaseline, 
-             TString legend="ciao") {
-        //cout << "Number of parameters: ";
-        //cout << pars.size() << endl;
-
-        fAddModes.push_back(addmode);
-        fDrawOnBaseline.push_back(onbaseline);
-        fLegendEntries.push_back(legend);
-
-        if (name == "pol0") {  // Constant function
-            this->fFitFunc.push_back(Pol0);
-            this->fFitFuncComps.push_back(name);
-        } else if (name == "pol1") {  // pol1
-            this->fFitFunc.push_back(Pol1);
-            this->fFitFuncComps.push_back(name);
-        } else if (name == "pol2") {  // pol2
-            this->fFitFunc.push_back(Pol2);
-            this->fFitFuncComps.push_back(name);
-        } else if (name == "pol3") {  // pol3
-            this->fFitFunc.push_back(Pol3);
-            this->fFitFuncComps.push_back(name);
-        } else if (name == "gaus") {  // Breit-Wigner function
-            this->fFitFunc.push_back(Gaus);
-            this->fFitFuncComps.push_back(name);
-        } else if (name == "bw") {    // Breit-Wigner function
-            this->fFitFunc.push_back(BreitWigner);
-            this->fFitFuncComps.push_back(name);
-        } else if (name == "voigt") { // Breit-Wigner function
-            this->fFitFunc.push_back(Voigt);
-            this->fFitFuncComps.push_back(name);
-        } else if (name == "ComplexLednicky_Singlet_doublegaussian_lambda") { // Complex Lednicky
-            this->fFitFunc.push_back(ComplexLednicky_Singlet_doublegaussian_lambda);
-            this->fFitFuncComps.push_back(name);
-        } else if (name == "landau") { // Complex Lednicky
-            this->fFitFunc.push_back(Landau);
-            this->fFitFuncComps.push_back(name);
-        } else if (name == "sillkstar") { // // breit wigner kstar dependent
-            this->fFitFunc.push_back(BreitWignerKStar);
-            this->fFitFuncComps.push_back(name);
-        } else if (name == "spline3") { // Spline3
-            this->fFitFunc.push_back(Spline3);
-            this->fFitFuncComps.push_back(name);
-        } else if (name == "spline3range") { // breit wigner kstar dependent
-            this->fFitFunc.push_back(Spline3Range);
-            this->fFitFuncComps.push_back(name);
-        } else {
-            //printf("Error: function '%s' is not implemented. Exit!", name.data());
-            exit(1);
-        }
-
-        this->fNPars.push_back(pars.size());
-
-        // Save fit settings
-        for (const auto &par : pars) {
-            this->fFitPars.insert({this->fFitPars.size(), par});
-        }
+    void SetBaselineIdx(double basIdx) {
+        this->fBaselineIdx = basIdx; 
     }
 
-
-    void AddBaseline(TString name, std::vector<std::tuple<std::string, double, double, double>> pars, std::string addmode="",
-                     TString legend="ciaobas") {
-        //cout << "Number of parameters: ";
-        //cout << pars.size() << endl;
-        this->fBaselineIdx = fAddModes.size(); 
-        fAddModes.push_back(addmode);
-        fDrawOnBaseline.push_back(0);
-        fLegendEntries.push_back(legend);
-
-        if (name == "pol0") {  // Constant function
-            this->fBaseline = Pol0;
-            this->fFitFuncComps.push_back(name+"_baseline");
-        } else if (name == "pol1") {  // pol1
-            this->fBaseline = Pol1;
-            this->fFitFuncComps.push_back(name+"_baseline");
-        } else if (name == "pol2") {  // pol2
-            this->fBaseline = Pol2;
-            this->fFitFuncComps.push_back(name+"_baseline");
-        } else if (name == "pol3") {  // pol3
-            this->fBaseline = Pol3;
-            this->fFitFuncComps.push_back(name+"_baseline");
-        } else if (name == "gaus") {  // Breit-Wigner function
-            this->fBaseline = Gaus;
-            this->fFitFuncComps.push_back(name+"_baseline");
-        } else if (name == "bw") {    // Breit-Wigner function
-            this->fBaseline = BreitWigner;
-            this->fFitFuncComps.push_back(name+"_baseline");
-        } else if (name == "voigt") { // Breit-Wigner function
-            this->fBaseline = Voigt;
-            this->fFitFuncComps.push_back(name+"_baseline");
-        } else if (name == "ComplexLednicky_Singlet_doublegaussian_lambda") { // Complex Lednicky
-            this->fBaseline = ComplexLednicky_Singlet_doublegaussian_lambda;
-            this->fFitFuncComps.push_back(name+"_baseline");
-        } else if (name == "landau") { // Complex Lednicky
-            this->fBaseline = Landau;
-            this->fFitFuncComps.push_back(name+"_baseline");
-        } else if (name == "sillkstar") { // // breit wigner kstar dependent
-            this->fBaseline = BreitWignerKStar;
-            this->fFitFuncComps.push_back(name+"_baseline");
-        } else if (name == "spline3") { // Spline3
-            this->fBaseline = Spline3;
-            this->fFitFuncComps.push_back(name+"_baseline");
-        } else if (name == "spline3range") { // breit wigner kstar dependent
-            this->fBaseline = Spline3Range;
-            this->fFitFuncComps.push_back(name+"_baseline");
-        } else {
-            //printf("Error: function '%s' is not implemented. Exit!", name.data());
-            exit(1);
+    void DrawLegend(TVirtualPad *pad, double lowX, double lowY, double highX, double highY, 
+                    std::vector<TString> labels = {}) {
+        TLegend *legend = new TLegend(lowX, lowY, highX, highY);
+        legend->AddEntry(this->fDataHist, labels[0].Data(), "lp");
+        legend->AddEntry(this->fFit, labels[1].Data(), "l");
+        for(int iLabel=2; iLabel<labels.size(); iLabel++) {
+            if(labels[iLabel].Contains("lambda_flat")) continue;
+            legend->AddEntry(this->fFitFuncEval[iLabel-2], labels[iLabel].Data(), "l");
         }
-
-        this->fNPars.push_back(pars.size());
-
-        // Save fit settings
-        for (const auto &par : pars) {
-            this->fFitPars.insert({this->fFitPars.size(), par});
-        }
+        legend->SetBorderSize(0);
+        legend->SetTextSize(0.045);
+        legend->Draw("same");
+        pad->Update();
     }
-
-    void AddSplineHisto(TString name, TH1* splinedhisto, std::vector<std::tuple<std::string, double, double, double>> pars, std::string addmode, bool onbaseline,
-                        TString legend="ciaospl") {
-
-        this->fFitFuncComps.push_back(name);
-        this->fAddModes.push_back(addmode);
-        fDrawOnBaseline.push_back(onbaseline);
-        fLegendEntries.push_back(legend);
-        
-        this->fNPars.push_back(pars.size());
-        // Save fit settings
-        for (const auto &par : pars) {
-            this->fFitPars.insert({this->fFitPars.size(), par});
-        }
-        
-        TH1D *splineHisto = static_cast<TH1D*>(splinedhisto);
-        TSpline3* sp3 = new TSpline3(splinedhisto);
-        this->fFitSplines.push_back(sp3);
-        //cout << "Added spline" << endl;
-        //cout << endl;
-    }
-
 
     void DrawSpline(TVirtualPad *pad, TH1* hist) {
         pad->cd();
@@ -206,28 +78,82 @@ class CorrelationFitterNew {
         histo->SetLineWidth(3);
         histo->Draw("same pe");
         pad->Update();
+    }
 
+    /*
+    Add a term to the CF model. Available options:
+        - pol0
+        - bw (Breit-Wigner)
+
+    In pyroot, the fit parameters (pars) are specified as a list of tuples.
+
+    The syntax is: `(name, initialValue, lowerLim, upperLim)`. To fix a parameter set `lowerLim > upperLim`, e.g
+    `fitter.Add('bw',
+    [('p0', 0.9, 1, -1)])`
+
+    Example:
+    ```fitter.Add('bw', [
+        ('yield', 0.03, 0.001, 0.1),
+        ('mean', 0.126, 0.125, 0.127),
+        ('gamma', 0.004, 0.003, 0.005),
+    ])```
+
+    It is your responsibility to give the correct number of parameters. All fit parameters must be initialized.
+    */
+
+    void Add(TString name, std::vector<std::tuple<std::string, double, double, double>> pars, std::string addmode, bool onbaseline) {
+
+        if(this->fFuncMap.find(name)!=this->fFuncMap.end()){
+            this->fFitFunc.push_back(this->fFuncMap[name]);
+            this->fFitFuncComps.push_back(name);
+        } else {
+            printf("Error: function '%s' is not implemented. Exit!", name.Data());
+            exit(1);
+        }
+
+        this->fAddModes.push_back(addmode);
+        this->fDrawOnBaseline.push_back(onbaseline);
+        this->fNPars.push_back(pars.size());
+        // Save fit settings
+        for (const auto &par : pars) {
+            this->fFitPars.insert({this->fFitPars.size(), par});
+        }
+    }
+
+    void AddSplineHisto(TString name, TH1* splinedhisto, std::vector<std::tuple<std::string, double, double, double>> pars, std::string addmode, bool onbaseline,
+                        TString legend="ciaospl") {
+
+        TH1D *splineHisto = static_cast<TH1D*>(splinedhisto);
+        TSpline3* sp3 = new TSpline3(splinedhisto);
+        this->fFitSplines.push_back(sp3);
+        this->fFitFuncComps.push_back(name);
+        
+        this->fAddModes.push_back(addmode);
+        this->fDrawOnBaseline.push_back(onbaseline);
+        this->fNPars.push_back(pars.size());
+        // Save fit settings
+        for (const auto &par : pars) {
+            this->fFitPars.insert({this->fFitPars.size(), par});
+        }
     }
 
     // Perform the fit
     int Fit() {
-        //cout << "Fitting" << endl;
+        cout << "Fitting" << endl;
         int totTerms = this->fFitFunc.size() + this->fFitSplines.size() + 1;
-        //cout << "Total terms: " << this->fFitFunc.size() << " + " << this->fFitSplines.size() << endl;
         // Build the fit function
         this->fFit = new TF1(
             "fFit",
             [&, this](double *x, double *pars) {
                 double result = 0;
-                int nTerms = this->fFitFunc.size() + this->fFitSplines.size() + 1;
+                int nTerms = this->fFitFunc.size() + this->fFitSplines.size();
                 int nPar = 0;
                 int nSplineComp = 0;
                 int nFuncComp = 0;
-                //cout << "nSplineComp: " << nSplineComp << "  " << "nFuncComp: " << nFuncComp << endl;
-                //cout << "nTerms: " << nTerms << endl;
-                //cout << "nSplineComp: " << nSplineComp << "  " << "nFuncComp: " << nFuncComp << endl;
+                // cout << "nSplineComp: " << nSplineComp << "  " << "nFuncComp: " << nFuncComp << endl;
+                // cout << "nTerms: " << nTerms << endl;
                 for (int iTerm = 0; iTerm < nTerms; iTerm++) {
-
+                    // cout << "nSplineComp: " << nSplineComp << "  " << "nFuncComp: " << nFuncComp << endl;
                     if(fFitFuncComps[iTerm].Contains("splinehisto")) {
                         auto func = this->fFitSplines[nSplineComp];
                         if(fAddModes[iTerm] == "mult") {
@@ -236,34 +162,26 @@ class CorrelationFitterNew {
                         }
                         else {
                             result += pars[nPar]*this->fFitSplines[nSplineComp]->Eval(x[0]);
+                        // cout << "Term number " << iTerm << " added" << endl;             
                         }
                         nSplineComp++;
                     } else {
-                        if(fFitFuncComps[iTerm].Contains("_baseline")) {
-                            auto func = this->fBaseline;
-                            if(fAddModes[iTerm] == "mult") {
-                                double partResult = result; 
-                                result = pars[nPar]*func(x, &pars[nPar+1])*partResult;
-                            } else {
-                                result += pars[nPar]*func(x, &pars[nPar+1]);
-                            }
-                        } else { 
-                            auto func = this->fFitFunc[nFuncComp];
-                            if(fAddModes[iTerm] == "mult") {
-                                double partResult = result; 
-                                result = pars[nPar]*func(x, &pars[nPar+1])*partResult;
-                            } else {
-                                result += pars[nPar]*func(x, &pars[nPar+1]);
-                            }
-                            nFuncComp++;                            
+                        auto func = this->fFitFunc[nFuncComp];
+                        if(fAddModes[iTerm] == "mult") {
+                            double partResult = result; 
+                            result = pars[nPar]*func(x, &pars[nPar+1])*partResult;
+                        } else {
+                            result += pars[nPar]*func(x, &pars[nPar+1]);
                         }
+                        nFuncComp++;                            
+                        // cout << "Term number " << iTerm << " added" << endl;             
                     }
-                    nPar += this->fNPars[iTerm+1];                
+                    nPar += this->fNPars[iTerm+1];   
                 }
-                return result;
-            },
-            fFitRangeMin, fFitRangeMax, this->fFitPars.size());
+                return result;}, 
+                fFitRangeMin, fFitRangeMax, this->fFitPars.size());
 
+        cout << "Fit function created!" << endl;
         for (size_t iPar = 0; iPar < this->fFitPars.size(); iPar++) {
             auto pars = this->fFitPars[iPar];
             this->fFit->SetParName(iPar, std::get<0>(pars).data());
@@ -289,201 +207,209 @@ class CorrelationFitterNew {
         return this->fFit;
     } 
 
-    void DrawLegend(TVirtualPad *pad, double lowX, double lowY, double highX, double highY) {
-        TLegend *legend = new TLegend(lowX, lowY, highX, highY);
-        legend->AddEntry(this->fDataHist, "#Lambda#pi^{#scale[1.3]{+}}#oplus #bar{#Lambda}#pi^{#scale[1.5]{-}}", "lp");
-        legend->AddEntry(this->fFitFuncEval[0], fLegendEntries[fBaselineIdx].Data(), "l");
-        legend->AddEntry(this->fFitFuncEval.back(), "All Simulations", "l");
-        legend->AddEntry(this->fFitFuncEval[1], fLegendEntries[0].Data(), "l");
-        legend->AddEntry(this->fFit, "Total", "l");
-        //legend->AddEntry(this->fFitFuncEval[1], fLegendEntries[1].Data(), "l");
-        //legend->AddEntry(this->fFitFuncEval[1], fLegendEntries[2].Data(), "l");
-        //for(int iFunc=0; iFunc<this->fFitFunc.size() + this->fFitSplines.size() + 1; iFunc++) {
-        //    cout << fBaselineIdx << iFunc << endl;
-        //    if(!fLegendEntries[iFunc].Contains("lambda_flat") && iFunc != fBaselineIdx && !fLegendEntries[iFunc].Contains("Lednicky")) {
-        //        legend->AddEntry(this->fFitFuncEval[iFunc], fLegendEntries[iFunc].Data(), "l");
-        //    }
-        //}
-        legend->SetBorderSize(0);
-        legend->SetTextSize(0.045);
-        legend->Draw("same");
-        pad->Update();
-    }
     /*
     Define a canvas before calling this function and pass gPad as TVirtualPad
     */
-    void Draw(TVirtualPad *pad) {
-        pad->cd();
-        //double yMaxDraw = 1.3 * fDataHist->GetMaximum();
-        double yMaxDraw = 1.15;
+    void Draw(TVirtualPad *pad, std::vector<TString> addComps = {""}, double lowRangeUser=0.0, double uppRangeUserMult=1.05, 
+              std::string title=";k* (MeV/c);C(k*)") {
 
-        fDataHist->GetYaxis()->SetRangeUser(0.98, yMaxDraw);
+        EvaluateComponentsNew(addComps); 
+
+        cout << "Components evaluated" << endl;
+
+        pad->cd();
+        double yMinDraw = lowRangeUser;
+        double yMaxDraw = uppRangeUserMult * fDataHist->GetMaximum();
+        cout << "yMin, yMax set" << endl;
+        
+        //fDataHist->GetYaxis()->SetRangeUser(0.98, yMaxDraw);
         // gPad->DrawFrame(fFitRangeMin, 0, fFitRangeMax, yMaxDraw,
         //                 Form("%s;%s;%s", this->fDataHist->GetTitle(), this->fDataHist->GetXaxis()->GetTitle(),
         //                      this->fDataHist->GetYaxis()->GetTitle()));
-        gPad->DrawFrame(fFitRangeMin, 0.98, fFitRangeMax, 1.1, ";k* (MeV/c);C(k*)");
+        gPad->DrawFrame(fFitRangeMin, yMinDraw, fFitRangeMax, yMaxDraw, title.data());
         this->fFit->SetNpx(300);
         this->fFit->SetLineColor(kRed);
         this->fFit->SetLineWidth(3);
         this->fFit->DrawF1(fFitRangeMin+1,fFitRangeMax,"same");
         pad->Update();
+        cout << "Fit function drawn" << endl;
 
-        std::vector<TF1*> components;
-        //cout << "Evaluating baseline, N parameters: " << fNPars[fBaselineIdx+1] << endl;
-        components.push_back(new TF1("baseline", fBaseline, fFitRangeMin, fFitRangeMax, fNPars[fBaselineIdx+1]-1));
-        int setParsBaseline = accumulate(fNPars.begin(), std::next(fNPars.begin(), fBaselineIdx+1), 0);
-        for(int iPar=1; iPar<fNPars[fBaselineIdx+1]; iPar++) {
-            //cout << "N pars: " << fNPars[fBaselineIdx+1] << endl;
-            //cout << "Setting parameter: " << iPar << " at " << this->fFit->GetParameter(setParsBaseline + iPar) << endl;
-            components.back()->FixParameter(iPar-1, this->fFit->GetParameter(setParsBaseline + iPar));
+        std::vector<Color_t> colors = {kBlue, kAzure + 2, kGreen, kBlue + 2, kOrange, kCyan, kBlack, kMagenta, kYellow};
+        cout << "Number of components to be drawn: " << fFitFuncEval.size() << endl;
+        //for(int iFuncEval=0; iFuncEval<2; iFuncEval++) { working
+        //for(int iFuncEval=0; iFuncEval<3; iFuncEval++) {
+        for(int iFuncEval=0; iFuncEval<fFitFuncEval.size(); iFuncEval++) {
+            this->fFitFuncEval[iFuncEval]->SetNpx(300);
+            this->fFitFuncEval[iFuncEval]->SetLineColor(colors[iFuncEval]);
+            this->fFitFuncEval[iFuncEval]->SetLineWidth(3);
+            this->fFitFuncEval[iFuncEval]->DrawF1(fFitRangeMin+1,fFitRangeMax,"same");
+            cout << "Fit component number " << iFuncEval << " drawn" << endl;
+            pad->Update();
         }
-        //cout << "Value of raw component at 2 MeV: " << components.back()->Eval(2) << endl;
-        //cout << "Multiplicative factor: " << this->fFit->GetParameter(setParsBaseline) << endl;
-        this->fFitFuncEval.push_back(new TF1("baseline",
-            [&, this, setParsBaseline, components](double *x, double *pars) {
-                return this->fFit->GetParameter(setParsBaseline)*components.back()->Eval(x[0]);},
-            fFitRangeMin, fFitRangeMax, 0));
-        //cout << "Value of component after normalization at 2 MeV: " << this->fFitFuncEval.back()->Eval(2) << endl;
-        //cout << endl;
-        this->fFitFuncEval.back()->SetNpx(300);
-        this->fFitFuncEval.back()->SetLineColor(kGreen+1);
-        this->fFitFuncEval.back()->SetLineWidth(3);
-        this->fFitFuncEval.back()->DrawF1(fFitRangeMin+1,fFitRangeMax,"same");
-        pad->Update();
+        this->fFitFuncEval[3]->Eval(2);
 
-        //cout << endl << endl;
+        //exit();
 
-        std::vector<Color_t> colors = {kBlue, kAzure + 2, kGreen, kBlue + 2, kOrange, kCyan, kBlack};
-        
-        int nTerms = this->fFitFunc.size() + this->fFitSplines.size() + 1;
-        int nSplineComp = 0;
-        int nFuncComp = 0;
-        int setPars = 0;
-        //cout << "N pars: ";
-        for(int iNPars=0; iNPars<nTerms+1; iNPars++) {
-            //cout << fNPars[iNPars] << " ";
-        }
-        for(int iFunc=0; iFunc<nTerms; iFunc++) {
-            //if(iFunc==1) {setPars += fNPars[iFunc+1]; continue;}
-            //cout << "Evaluating component ... " << iFunc << endl;
-            TString funcName = this->fFitFuncComps[iFunc];
-            std::string compName = static_cast<std::string>(this->fFitFuncComps[iFunc]);
-            //cout << "Name of component: " << funcName << endl;
-            if(funcName.Contains("_baseline")) {
-                setPars += fNPars[iFunc+1];
-                continue;
-            }
-            if(funcName.Contains("splinehisto")) {
-                if(fDrawOnBaseline[iFunc]) {
-                    //cout << "Drawing spline" << endl;
-                    this->fFitFuncEval.push_back(new TF1(compName.data(),
-                        [&, this, setPars, nSplineComp](double *x, double *pars) {
-                            return this->fFitFuncEval[0]->Eval(x[0]) + this->fFit->GetParameter(setPars)*this->fFitSplines[nSplineComp]->Eval(x[0]);
-                        },
-                        fFitRangeMin, fFitRangeMax, 0));
-                } else {
-                    this->fFitFuncEval.push_back(new TF1(compName.data(),
-                        [&, this, setPars, nSplineComp](double *x, double *pars) {
-                            return this->fFit->GetParameter(setPars)*this->fFitSplines[nSplineComp]->Eval(x[0]);
-                        },
-                        fFitRangeMin, fFitRangeMax, 0));
-                }
-                
-                this->fFitFuncEval.back()->SetNpx(300);
-                this->fFitFuncEval.back()->SetLineColor(colors[iFunc]);
-                this->fFitFuncEval.back()->SetLineWidth(3);
-                //this->fFitFuncEval.back()->Draw("same");
-                pad->Update();
-                //cout << "Value of component after normalization at 2 MeV: " << this->fFitFuncEval.back()->Eval(2) << endl;
-                //cout << endl;
-                setPars += fNPars[iFunc+1];
-                nSplineComp++;
-            } else {
-                cout << "Ciao" << endl;
-                //cout << fNPars[iFunc+1] << endl;
-                components.push_back(new TF1(Form("iComp_%.0f", iFunc), fFitFunc[nFuncComp], fFitRangeMin, fFitRangeMax, fNPars[iFunc+1]-1));
-                for(int iPar=1; iPar<fNPars[iFunc+1]; iPar++) {
-                    cout << "Setting parameter: (" << iPar << "," << this->fFit->GetParameter(setPars + iPar) << "), " << endl;
-                    components.back()->FixParameter(iPar-1, this->fFit->GetParameter(setPars + iPar));
-                }
-                cout << "Value of raw component at 2 MeV: " << components.back()->Eval(2) << ", " << "Multiplicative factor: " << this->fFit->GetParameter(setPars) << endl;
-                if(funcName.Contains("Lednicky")) {
-                    this->fFitFuncEval.push_back(new TF1("model",
-                            [&, this, setPars, components](double *x, double *pars) {
-                                return components.back()->Eval(x[0]);},
-                            fFitRangeMin, fFitRangeMax, 0));
-                    
-                    cout << "Value of baseline at 2 MeV: " << this->fFitFuncEval[0]->Eval(2) << endl;
-                    cout << "Value of component after normalization at 2 MeV: " << this->fFitFuncEval.back()->Eval(2) << endl;
-                    //cout << endl;
-                    this->fFitFuncEval.back()->SetNpx(300);
-                    this->fFitFuncEval.back()->SetLineColor(colors[iFunc]);
-                    this->fFitFuncEval.back()->SetLineWidth(3);
-                    this->fFitFuncEval.back()->DrawF1(fFitRangeMin+1,fFitRangeMax,"same");
-                    setPars += fNPars[iFunc+1];
-                    nFuncComp++;
-                } else {
-                    if(fDrawOnBaseline[iFunc]) { 
-                        this->fFitFuncEval.push_back(new TF1(compName.data(),
-                            [&, this, setPars, components](double *x, double *pars) {
-                                return this->fFitFuncEval[0]->Eval(x[0]) + this->fFit->GetParameter(setPars)*components.back()->Eval(x[0]);},
-                            fFitRangeMin, fFitRangeMax, 0));
-                    } else { 
-                        this->fFitFuncEval.push_back(new TF1(compName.data(),
-                            [&, this, setPars, components](double *x, double *pars) {
-                                return this->fFit->GetParameter(setPars)*components.back()->Eval(x[0]);},
-                            fFitRangeMin, fFitRangeMax, 0));
-                    }
-                    //cout << "Value of baseline at 2 MeV: " << this->fFitFuncEval[0]->Eval(2) << endl;
-                    //cout << "Value of component after normalization at 2 MeV: " << this->fFitFuncEval.back()->Eval(2) << endl;
-                    //cout << endl;
-                    this->fFitFuncEval.back()->SetNpx(300);
-                    this->fFitFuncEval.back()->SetLineColor(colors[iFunc]);
-                    this->fFitFuncEval.back()->SetLineWidth(3);
-                    this->fFitFuncEval.back()->DrawF1(fFitRangeMin+1,fFitRangeMax,"same");
-                    pad->Update();
-                    setPars += fNPars[iFunc+1];
-                    nFuncComp++;
-                }
-            }
-        }
-        
-        this->fFitFuncEval.push_back(new TF1("All Simulations", 
-                [&, this](double *x, double *pars) {
-                    return this->fFitFuncEval[3]->Eval(x[0]) +
-                           this->fFitFuncEval[4]->Eval(x[0]) +
-                           this->fFitFuncEval[5]->Eval(x[0]) +
-                           this->fFitFuncEval[6]->Eval(x[0]) -
-                           3*this->fFitFuncEval[0]->Eval(x[0]);
-                }, fFitRangeMin, fFitRangeMax, 0));
 
-        fFitFuncEval.back()->SetNpx(300);
-        cout << "Evaluation of the simulation function: " << fFitFuncEval.back()->Eval(2) << endl;
-        fFitFuncEval.back()->SetLineColor(kMagenta-3);
-        fFitFuncEval.back()->SetLineWidth(3);
-        fFitFuncEval.back()->DrawF1(fFitRangeMin+1,fFitRangeMax,"same");
-        
-        printf("size %d\n", fFitFuncEval.size());
-        
-        for(int iEvalFunc=0; iEvalFunc<fFitFuncEval.size(); iEvalFunc++) {
-            //cout << "Normalized component " << iEvalFunc << " at 2 MeV: " << this->fFitFuncEval[iEvalFunc]->Eval(200) << endl;
-        }
-        //cout << endl;
- 
+        cout << "CIAO1" << endl;
+        fDataHist->GetYaxis()->SetRangeUser(yMinDraw, yMaxDraw); 
+        cout << "CIAO2" << endl;
         fDataHist->SetMarkerSize(0.3);
+        cout << "CIAO3" << endl;
         fDataHist->SetMarkerStyle(20);
+        cout << "CIAO4" << endl;
         fDataHist->SetMarkerColor(kBlack);
+        cout << "CIAO5" << endl;
         fDataHist->SetLineColor(kBlack);
+        cout << "CIAO6" << endl;
         fDataHist->SetLineWidth(3);
+        cout << "CIAO7" << endl;
         fDataHist->Draw("same pe");
+        cout << "CIAO8" << endl;
         pad->Update();
+        cout << "Histogram drawn" << endl;
+    }
+
+    void Debug() {
+        cout << "########## Debugging fit components ##########" << endl;
+        cout << "Total spline terms: " << this->fFitSplines.size() << endl;
+        cout << "Total func terms: " << this->fFitFunc.size() << endl;
+        cout << "--------------------------" << endl;    
+        for(int iTerm=0; iTerm<this->fFitSplines.size() + this->fFitFunc.size(); iTerm++) {
+            if(iTerm==fBaselineIdx) cout << "BASELINE" << endl;
+            cout << "Add Mode: " << this->fAddModes[iTerm] << endl;
+            cout << "Number of parameters of term " << iTerm << ": " << this->fNPars[iTerm+1] << endl;
+            int startPar = accumulate(fNPars.begin(), std::next(fNPars.begin(), iTerm+1), 0);
+            for(int iPar=0; iPar<this->fFitSplines.size() + this->fFitFunc.size(); iPar++) {
+                cout << "Parameter " << iPar << "value: " << this->fNPars[startPar + iPar] << endl;
+            }
+            cout << "--------------------------" << endl;
+        }
     }
 
    private:
+
+    void EvaluateComponentsNew(std::vector<TString> addComps = {""}) {
+        
+        cout << "fNPars size: " << fNPars.size() << endl;
+        for(int iNPar = 0; iNPar<fNPars.size(); iNPar++) {
+            cout << fNPars[iNPar] << " ";
+        }
+        cout << endl;
+        int normParNumber = 0;
+        for(int iNorm=0; iNorm<fNPars.size()-1; iNorm++) {
+            cout << "Norm par number: " << normParNumber << endl;
+            cout << "Getting parameter number " << normParNumber << endl;
+            fNorms.push_back(this->fFit->GetParameter(normParNumber));
+            cout << "Norm of " << iNorm << "-th component: " << this->fFit->GetParameter(normParNumber) << endl;
+            normParNumber += fNPars[iNorm+1];
+            cout << endl;
+        }
+
+        cout << endl;
+        for(int iPar=0; iPar<this->fFit->GetNpar(); iPar++) {
+            cout << "Fit function par " << iPar << "-th: " << this->fFit->GetParameter(iPar) << endl;
+        }
+        cout << endl;
+
+        std::vector<TF1*> components;
+        int nTerms = this->fFitFunc.size() + this->fFitSplines.size();
+        cout << "Number of fit components: " << nTerms << endl;
+        int setPars = 0;
+        int iSpline = 0;
+        int iFunc = 0;
+        for(int iTerm=0; iTerm<nTerms; iTerm++) {
+            std::string compName = static_cast<std::string>(this->fFitFuncComps[iTerm]);
+            if(this->fFitFuncComps[iTerm].Contains("spline")) {
+                components.push_back(new TF1(Form("iComp_%.0f", iTerm),
+                        [&, this, iSpline](double *x, double *pars) {
+                            return fFitSplines[iSpline]->Eval(x[0]);
+                        }, fFitRangeMin, fFitRangeMax, 0));
+                iSpline++;
+            } else {
+                components.push_back(new TF1(Form("iComp_%.0f", iTerm), fFitFunc[iFunc], fFitRangeMin, fFitRangeMax, fNPars[iTerm+1]));
+                iFunc++;                
+                for(int iPar=1; iPar<fNPars[iTerm+1]; iPar++) {
+                    cout << "Setting parameter: (" << iPar-1 << "," << this->fFit->GetParameter(setPars + iPar) << "), " << endl;
+                    components.back()->FixParameter(iPar-1, this->fFit->GetParameter(setPars + iPar));
+                }
+            }
+            setPars += fNPars[iTerm+1];    
+            cout << endl;
+        }
+        
+        for(int iFunc=0; iFunc<nTerms; iFunc++) {
+            bool toBeSummed = false;
+            for(int iAddComp=0; iAddComp<addComps.size(); iAddComp++) {
+                
+                if(addComps[iAddComp].Contains(std::to_string(iFunc))) {
+                    cout << "Component to be summed" << endl;
+                    toBeSummed = true;
+                    continue;
+                }
+            }
+            
+            if(!toBeSummed) {
+                cout << "Adding component" << endl;
+                cout << "Norm: " << this->fNorms[iFunc] << endl;
+                this->fFitFuncEval.push_back(new TF1(Form("Comp_%i", iFunc),
+                    [&, this, iFunc, components](double *x, double *pars) {
+                        if(this->fDrawOnBaseline[iFunc]) {
+                            return this->fNorms[iFunc]*components[iFunc]->Eval(x[0]) + 
+                                   this->fNorms[this->fBaselineIdx]*components[this->fBaselineIdx]->Eval(x[0]);
+                        } else if(this->fFitFuncComps[iFunc].Contains("Lednicky")) {
+                            return components[iFunc]->Eval(x[0]);
+                        } else {
+                            return this->fNorms[iFunc]*components[iFunc]->Eval(x[0]);
+                        }},
+                    fFitRangeMin, fFitRangeMax, 0));            
+            }
+        }        
+            
+        cout << "FitFuncEval size: " << fFitFuncEval.size() << endl;
+        //if(addComps[0] != "") {
+        //if(addComps[0] == "3456") {
+        cout << addComps[0].Atoi() << endl;                
+        if(addComps[0].EqualTo("3456")) {
+            for(int iAddComp=0; iAddComp<addComps.size(); iAddComp++) {
+                cout << "Combined term " << addComps[iAddComp] << endl;
+                int compNumber = this->fFitFuncEval.size();
+                cout << "Component number " << compNumber << endl;
+                //this->fFitFuncEval.push_back(new TF1("Ciao",
+                this->fFitFuncEval.push_back(new TF1(Form("Comp_%i", compNumber),
+                        [&, this, nTerms, addComps, iAddComp, components](double *x, double *pars) {
+                        //cout << "Ciaoooooooooooooo1" << endl;                
+                        double sum = 0.;
+                        bool addBaseline = true;
+                        //cout << "Ciaoooooooooooooo2" << endl;                
+                        for(int iComp=0; iComp<nTerms; iComp++) {
+                            //cout << "Ciaoooooooooooooo3" << endl;                
+                            //cout << std::to_string(iComp) << endl;                
+                            //cout << addComps[iAddComp].Atoi() << endl;                
+                            //cout << addComps[iAddComp].Contains("ciao") << endl;                
+                            //cout << "Ciaoooooooooooooo4" << endl;                
+                            if(addComps[iAddComp].Contains(std::to_string(iComp))) {
+                                cout << iComp;
+                                sum += this->fNorms[iComp]*components[iComp]->Eval(x[0]);
+                                if(!this->fDrawOnBaseline[iComp]) addBaseline=false;
+                            }
+                            //cout << "Ciaoooooooooooooo4" << endl;                
+                        }
+                        //cout << "Ciaoooooooooooooo5" << endl;                
+                        if(addBaseline) {
+                            sum +=  this->fNorms[this->fBaselineIdx]*components[this->fBaselineIdx]->Eval(x[0]);
+                        }
+                        return sum;}, fFitRangeMin, fFitRangeMax, 0));
+            }
+        }
+        cout << "FitFuncEval size after joint components: " << fFitFuncEval.size() << endl;
+    }
+
     TH1 *fDataHist = nullptr;
     TH1 *fMCHist = nullptr;
     TF1 *fFit = nullptr;
 
+    std::map<TString, double (*)(double *x, double *par)> fFuncMap; // Map containing the implemented functions
     std::vector<double (*)(double *x, double *par)> fFitFunc;       // List of function describing each term of the CF model
     double (*fBaseline)(double *x, double *par);                    // Baseline function (for drawing purposes)
     double fBaselineIdx;                                            // Index of baseline function element
@@ -493,11 +419,87 @@ class CorrelationFitterNew {
     std::vector<TF1*> fFitFuncEval;                                 // Fit components evaluated after the fitting
     std::vector<int> fNPars;                                        // Keeps track of how many parameters each function has
     std::vector<std::string> fAddModes;                             // Select mode of adding the contributions to the model
-    std::vector<TString> fLegendEntries;                            // String with function names for legend
+    std::vector<double> fNorms;                                     // Vector saving the norm factor of each term
 
     double fFitRangeMin;
     double fFitRangeMax;
-    std::map<int, std::tuple<std::string, double, double, double>> fFitPars;        // List of fit parameters
+    std::map<int, std::tuple<std::string, double, double, double>> fFitPars;    // List of fit parameters
+    std::map<int, std::tuple<std::string, double, double, double>> fFitNorms;   // List of fit parameters
 };
 
 #endif  // FEMPY_CORRELATIONFITTERNEW_HXX_
+
+
+
+//    EvaluateComponents(std::vector<TString> addComps) {
+//        
+//        std::vector<TF1*> components;
+//        int nTerms = this->fFitFunc.size() + this->fFitSplines.size() + 1;
+//        int setPars = 0;
+//        for(int iFunc=0; iFunc<nTerms; iFunc++) {
+//            if(iFunc==fBaselineIdx) {
+//                setPars += fNPars[iFunc+1];
+//                continue;
+//            }
+//            //cout << "Evaluating component ... " << iFunc << endl;
+//            TString funcName = this->fFitFuncComps[iFunc];
+//            std::string compName = static_cast<std::string>(this->fFitFuncComps[iFunc]);
+//            components.push_back(new TF1(Form("iComp_%.0f", iFunc), fFitFunc[nFuncComp], fFitRangeMin, fFitRangeMax, fNPars[iFunc+1]-1));
+//            for(int iPar=1; iPar<fNPars[iFunc+1]; iPar++) {
+//                cout << "Setting parameter: (" << iPar << "," << this->fFit->GetParameter(setPars + iPar) << "), " << endl;
+//                components.back()->FixParameter(iPar-1, this->fFit->GetParameter(setPars + iPar));
+//            }
+//            //cout << "Name of component: " << funcName << endl;
+//            if(fDrawOnBaseline[iFunc]) {
+//                //cout << "Drawing spline" << endl;
+//                this->fFitFuncEval.push_back(new TF1(compName.data(),
+//                    [&, this, setPars, iTerm](double *x, double *pars) {
+//                        return this->fFitFuncEval[fBaselineIdx]->Eval(x[0]) + this->fFit->GetParameter(setPars)*this->fFitFunc[iTerm]->Eval(x[0]);
+//                    },
+//                    fFitRangeMin, fFitRangeMax, fNPars[iFunc+1]-1));
+//            } else {
+//                this->fFitFuncEval.push_back(new TF1(compName.data(),
+//                    [&, this, setPars, iTerm](double *x, double *pars) {
+//                        return this->fFit->GetParameter(setPars)*this->fFitFunc[iTerm]->Eval(x[0]);
+//                    },
+//                    fFitRangeMin, fFitRangeMax, fNPars[iFunc+1]-1));
+//            }
+//            //cout << "Value of component after normalization at 2 MeV: " << this->fFitFuncEval.back()->Eval(2) << endl;
+//            //cout << endl;
+//            setPars += fNPars[iFunc+1];    
+//        } else {
+//                //cout << fNPars[iFunc+1] << endl;
+//                
+//                cout << "Value of raw component at 2 MeV: " << components.back()->Eval(2) << ", " << "Multiplicative factor: " << this->fFit->GetParameter(setPars) << endl;
+//                if(funcName.Contains("Lednicky")) {
+//                    this->fFitFuncEval.push_back(new TF1("model",
+//                            [&, this, setPars, components](double *x, double *pars) {
+//                                return components.back()->Eval(x[0]);},
+//                            fFitRangeMin, fFitRangeMax, 0));
+//                    
+//                    cout << "Value of baseline at 2 MeV: " << this->fFitFuncEval[0]->Eval(2) << endl;
+//                    cout << "Value of component after normalization at 2 MeV: " << this->fFitFuncEval.back()->Eval(2) << endl;
+//                    //cout << endl;
+//                    setPars += fNPars[iFunc+1];
+//                    nFuncComp++;
+//                } else {
+//                    if(fDrawOnBaseline[iFunc]) { 
+//                        this->fFitFuncEval.push_back(new TF1(compName.data(),
+//                            [&, this, setPars, components](double *x, double *pars) {
+//                                return this->fFitFuncEval[0]->Eval(x[0]) + this->fFit->GetParameter(setPars)*components.back()->Eval(x[0]);},
+//                            fFitRangeMin, fFitRangeMax, 0));
+//                    } else { 
+//                        this->fFitFuncEval.push_back(new TF1(compName.data(),
+//                            [&, this, setPars, components](double *x, double *pars) {
+//                                return this->fFit->GetParameter(setPars)*components.back()->Eval(x[0]);},
+//                            fFitRangeMin, fFitRangeMax, 0));
+//                    }
+//                    //cout << "Value of baseline at 2 MeV: " << this->fFitFuncEval[0]->Eval(2) << endl;
+//                    //cout << "Value of component after normalization at 2 MeV: " << this->fFitFuncEval.back()->Eval(2) << endl;
+//                    //cout << endl;
+//                    setPars += fNPars[iFunc+1];
+//                    nFuncComp++;
+//                }
+//            }
+//        }
+//

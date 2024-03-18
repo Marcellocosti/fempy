@@ -189,15 +189,13 @@ class Fitter {
             this->fFitFuncEval.back()->DrawF1(fFitRangeMin+1,fFitRangeMax,"same");
             pad->Update();
         }
-        
-        
+    
         fHist->SetMarkerSize(0.5);
         fHist->SetMarkerStyle(20);
         fHist->SetMarkerColor(kBlack);
         fHist->SetLineColor(kBlack);
         fHist->SetLineWidth(2);
         fHist->Draw("same pe");
-        printf("---> %d\n", fHist->GetNbinsX());
         pad->Update();
     }
 

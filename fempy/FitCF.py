@@ -88,12 +88,17 @@ for nFit, fitcf in enumerate(cfg['fitcfs']):
 
     cfFitters.append(CorrelationFitterNew(dataCF, mcCF, lowFitRange, uppFitRange))
 
+    ancIdx = 0
     # for loop over the functions entering in the model
     for funcIdx, func in enumerate(fitcf['model']):
         if('isbaseline' in func):
             if(func['isbaseline']):
                 #cfFitters[-1].SetBaselineIdx(funcIdx)
                 cfFitters[-1].SetBaselineIdx(2)
+        if('isancestor' in func and ancIdx==0):
+            if(func['isancestor']):
+                cfFitters[-1].SetAncestorIdx(ancIdx)
+        
         # fit function parameters initialization
         initPars = []
         
@@ -104,13 +109,12 @@ for nFit, fitcf in enumerate(cfg['fitcfs']):
                 splinedHisto.Rebin(func['rebin'])
             initPars = [(func['norm'][0], func['norm'][1], func['norm'][2], func['norm'][3])]
             cfFitters[-1].AddSplineHisto(func['funcname'], splinedHisto, initPars, func['addmode'], func['onbaseline'])
-            cSplinedHisto = TCanvas(f'cSplinedHisto_{func["funcname"]}', '', 600, 600)
+            cSplinedHisto = TCanvas(f'c{func["funcname"]}', '', 600, 600)
             cfFitters[-1].DrawSpline(cSplinedHisto, splinedHisto)
             oFile.cd(fitcf['fitname'])
             cSplinedHisto.Write()
-            print("CIAO SPLINE")
             continue
-        print("CIAO NORMAL FUNCTION")
+        
         # check if the function is to be prefitted
         if(func['prefitfile'] is not None):
 
@@ -208,8 +212,6 @@ for nFit, fitcf in enumerate(cfg['fitcfs']):
                     initPars = [(func[f'p{iPar}'][0], func[f'p{iPar}'][1], func[f'p{iPar}'][2], 
                                  func[f'p{iPar}'][3]) for iPar in range(func['npars'])]
             
-        print("CIAO INIT PARS")
-        print(initPars)
         if('lambdapar' in func):
             lambdaParam = [("lambdapar_" + func['funcname'], func['lambdapar'], 0, -1)]
             initPars = lambdaParam + initPars
@@ -226,17 +228,12 @@ for nFit, fitcf in enumerate(cfg['fitcfs']):
             else:    
                 cfFitters[-1].Add(func['funcname'], initPars, func['addmode'], func['onbaseline'])
                 
-    print("CIAO FIT")
     # perform the fit and save the result
     cfFitters[-1].Fit()
-    print("FIT DONE")
     cFit = TCanvas('cFit', '', 600, 600)
     cfFitters[-1].Draw(cFit, fitcf['drawsumcomps'])
-    print("FIT DRAWN")
-    #quit()
     cfFitters[-1].DrawLegend(cFit, fitcf['legcoords'][0], fitcf['legcoords'][1], fitcf['legcoords'][2], fitcf['legcoords'][3],
                              fitcf['legentries'])
-    print("LEGEND DRAWN")
     oFile.cd(fitcf['fitname'])
     cFit.Write()
     dataCF.Write()
@@ -244,6 +241,7 @@ for nFit, fitcf in enumerate(cfg['fitcfs']):
     pdfFileName = fitcf['fitname'] + cfg["suffix"] + ".pdf"
     pdfFilePath = os.path.join(cfg['odir'], pdfFileName) 
     cFit.SaveAs(pdfFilePath)
+    cfFitters[-1].Debug()
 
 oFile.Close()
 print(f'output saved in {oFileName}')

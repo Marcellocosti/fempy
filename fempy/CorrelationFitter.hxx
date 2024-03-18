@@ -1,5 +1,5 @@
-#ifndef FEMPY_CORRELATIONFITTERNEW_HXX_
-#define FEMPY_CORRELATIONFITTERNEW_HXX_
+#ifndef FEMPY_CORRELATIONFITTER_HXX_
+#define FEMPY_CORRELATIONFITTER_HXX_
 
 #include <map>
 #include <string>
@@ -13,9 +13,9 @@
 #include "LednickyLambdaPion.cxx"
 #include "FitFunctions.cxx"
 
-class CorrelationFitterNew {
+class CorrelationFitter {
    public:
-    CorrelationFitterNew(TH1 *datahist, TH1 *mchist, double fitRangeMin, double fitRangeMax) {
+    CorrelationFitter(TH1 *datahist, TH1 *mchist, double fitRangeMin, double fitRangeMax) {
         this->fDataHist = reinterpret_cast<TH1 *>(datahist->Clone());
         this->fMCHist = reinterpret_cast<TH1 *>(mchist->Clone());
         this->fFitRangeMin = fitRangeMin;
@@ -376,4 +376,4 @@ class CorrelationFitterNew {
     std::map<int, std::tuple<std::string, double, double, double>> fFitNorms;   // List of fit parameters
 };
 
-#endif  // FEMPY_CORRELATIONFITTERNEW_HXX_
+#endif  // FEMPY_CORRELATIONFITTER_HXX_

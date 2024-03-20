@@ -61,7 +61,7 @@ with open(args.cfg, 'r') as file:
         if(firstNonBlankChar == '#'): continue
         fileLines.append(line.rstrip())  # Strip to remove leading/trailing whitespaces
 
-oFileNameCfg = '/home/mdicostanzo/an/LPi/fits/' + oFileBaseName + '_cfg.txt' 
+oFileNameCfg = '/home/mdicostanzo/an/LPi/fitstry/' + oFileBaseName + '_cfg.txt' 
 with open(oFileNameCfg, 'w') as file:
     for line in fileLines:
         file.write(line)
@@ -91,10 +91,11 @@ for nFit, fitcf in enumerate(cfg['fitcfs']):
     ancIdx = 0
     # for loop over the functions entering in the model
     for funcIdx, func in enumerate(fitcf['model']):
+        print(func['funcname'])
         if('isbaseline' in func):
             if(func['isbaseline']):
-                #cfFitters[-1].SetBaselineIdx(funcIdx)
-                cfFitters[-1].SetBaselineIdx(2)
+                cfFitters[-1].SetBaselineIdx(funcIdx)
+                #cfFitters[-1].SetBaselineIdx(6)
         if('isancestor' in func and ancIdx==0):
             if(func['isancestor']):
                 cfFitters[-1].SetAncestorIdx(ancIdx)
@@ -102,7 +103,9 @@ for nFit, fitcf in enumerate(cfg['fitcfs']):
         # fit function parameters initialization
         initPars = []
         
+        #print('CIAO')
         if('splinehisto' in func['funcname']):
+            #print('CIAO1')
             histoFile = TFile(func['histofile'])
             splinedHisto = ChangeUnits(Load(histoFile, func['histopath']), 1000)
             if('rebin' in func):
@@ -116,88 +119,91 @@ for nFit, fitcf in enumerate(cfg['fitcfs']):
             continue
         
         # check if the function is to be prefitted
-        if(func['prefitfile'] is not None):
+        if('prefitcomp' not in func and func['prefitfile'] is not None):
+                
+                #print('CIAO2')
+                prefitFile = TFile(func['prefitfile'])
+                prefitHisto = ChangeUnits(Load(prefitFile, func['prefitpath']), 1000)
 
-            prefitFile = TFile(func['prefitfile'])
-            prefitHisto = ChangeUnits(Load(prefitFile, func['prefitpath']), 1000)
-        
+                # prefit function parameters initialization
+                preInitPars = []
+                lowPrefitRange = func['prefitrange'][0]
+                uppPrefitRange = func['prefitrange'][1]
 
-            # prefit function parameters initialization
-            preInitPars = []
-            lowPrefitRange = func['prefitrange'][0]
-            uppPrefitRange = func['prefitrange'][1]
-
-            preFitters.append(Fitter(prefitHisto, lowPrefitRange, uppPrefitRange))
-            cPrefit = TCanvas(f'cPrefit_{func["funcname"]}', '', 600, 600)
-            # the splines need a different implementation
-            if('spline3' in func['funcname']):
-                for nKnot, xKnot in enumerate(func['xknots']):
-                    preInitPars.append([f'xKnot{nKnot}', xKnot, xKnot, xKnot])
-                for nKnot, xKnot in enumerate(func['xknots']):
-                    nBin = prefitHisto.FindBin(xKnot)
-                    yKnot = prefitHisto.GetBinContent(nBin)
-                    preInitPars.append([f'yKnot{nKnot}', yKnot, yKnot - (yKnot/100)*func['bounds'], 
-                                        yKnot + (yKnot/100)*func['bounds']])
-            else:
-                preInitPars = [(func[f'p{iPar}'][0], func[f'p{iPar}'][1], func[f'p{iPar}'][2], 
-                                func[f'p{iPar}'][3]) for iPar in range(func['npars'])]
-            preFitters[-1].Add(func['funcname'], preInitPars)
-    
-            # include other functions of the prefitting model
-            for prefitFunc in func['prefitmodel']:
-                prefitInitPars = []
-                if('spline3' in prefitFunc['funcname']):
-                    for nKnot, xKnot in enumerate(prefitFunc['xknots']):
-                        prefitInitPars.append([f'xKnot{nKnot}', xKnot, xKnot, xKnot])
-                    for nKnot, xKnot in enumerate(prefitFunc['xknots']):
+                preFitters.append(Fitter(prefitHisto, lowPrefitRange, uppPrefitRange))
+                cPrefit = TCanvas(f'cPrefit_{func["funcname"]}', '', 600, 600)
+                # the splines need a different implementation
+                if('spline3' in func['funcname']):
+                    for nKnot, xKnot in enumerate(func['xknots']):
+                        preInitPars.append([f'xKnot{nKnot}', xKnot, xKnot, xKnot])
+                    for nKnot, xKnot in enumerate(func['xknots']):
                         nBin = prefitHisto.FindBin(xKnot)
                         yKnot = prefitHisto.GetBinContent(nBin)
-                        prefitInitPars.append([f'yKnot{nKnot}', yKnot, yKnot - (yKnot/100)*prefitFunc['bounds'], 
-                                           yKnot + (yKnot/100)*prefitFunc['bounds']])
-                else: 
-                    prefitInitPars = [(prefitFunc[f'p{iPar}'][0], prefitFunc[f'p{iPar}'][1], prefitFunc[f'p{iPar}'][2], 
-                                       prefitFunc[f'p{iPar}'][3]) for iPar in range(prefitFunc['npars'])]
-    
-                preFitters[-1].Add(prefitFunc['funcname'], prefitInitPars)
-    
-            preFitters[-1].Fit()
-            preFitters[-1].Draw(cPrefit)
-            oFile.cd(fitcf['fitname'])
-            cPrefit.Write()
+                        preInitPars.append([f'yKnot{nKnot}', yKnot, yKnot - (yKnot/100)*func['bounds'], 
+                                            yKnot + (yKnot/100)*func['bounds']])
+                else:
+                    preInitPars = [(func[f'p{iPar}'][0], func[f'p{iPar}'][1], func[f'p{iPar}'][2], 
+                                    func[f'p{iPar}'][3]) for iPar in range(func['npars'])]
+                preFitters[-1].Add(func['funcname'], preInitPars)
 
-            prefitRes = preFitters[-1].GetFunction()
+                # include other functions of the prefitting model
+                for prefitFunc in func['prefitmodel']:
+                    prefitInitPars = []
+                    if('spline3' in prefitFunc['funcname']):
+                        for nKnot, xKnot in enumerate(prefitFunc['xknots']):
+                            prefitInitPars.append([f'xKnot{nKnot}', xKnot, xKnot, xKnot])
+                        for nKnot, xKnot in enumerate(prefitFunc['xknots']):
+                            nBin = prefitHisto.FindBin(xKnot)
+                            yKnot = prefitHisto.GetBinContent(nBin)
+                            prefitInitPars.append([f'yKnot{nKnot}', yKnot, yKnot - (yKnot/100)*prefitFunc['bounds'], 
+                                               yKnot + (yKnot/100)*prefitFunc['bounds']])
+                    else: 
+                        prefitInitPars = [(prefitFunc[f'p{iPar}'][0], prefitFunc[f'p{iPar}'][1], prefitFunc[f'p{iPar}'][2], 
+                                           prefitFunc[f'p{iPar}'][3]) for iPar in range(prefitFunc['npars'])]
 
-            # save prefit results for fit parameter initialization
-            if(func['fixprefit']):
-                lowBound = 1
-                uppBound = 1
-            else:
-                lowBound = 0.8
-                uppBound = 1.2
+                    preFitters[-1].Add(prefitFunc['funcname'], prefitInitPars)
 
-            if('spline3' in func['funcname']):
-                nKnots = int(int(func['npars'])/2)
-                for iPar in range(nKnots):
-                    initPars.append([f'xKnot{iPar}', prefitRes.GetParameter(iPar), 
-                                     prefitRes.GetParameter(iPar), prefitRes.GetParameter(iPar)])            
-                for iPar in range(nKnots):
-                    initPars.append([f'yKnot{iPar}', prefitRes.GetParameter(iPar + nKnots), 
-                                     prefitRes.GetParameter(iPar + nKnots) * lowBound, prefitRes.GetParameter(iPar + nKnots) * uppBound])
+                print('PREFITTING')
+                preFitters[-1].Fit()
+                preFitters[-1].Draw(cPrefit)
+                oFile.cd(fitcf['fitname'])
+                preFitters[-1].GetFunction().Write()
+                cPrefit.Write()
 
-            else:
-                for iPar in range(func['npars']):
-                    if(func[f'p{iPar}'][2] > func[f'p{iPar}'][3]):
-                        initPars.append([func[f'p{iPar}'][0], func[f'p{iPar}'][1], func[f'p{iPar}'][2], func[f'p{iPar}'][3]])
-                    else:
-                        if(prefitRes.GetParameter(iPar) >= 0):
-                            initPars.append([func[f'p{iPar}'][0], prefitRes.GetParameter(iPar), 
-                                 prefitRes.GetParameter(iPar) * lowBound, prefitRes.GetParameter(iPar) * uppBound])
+                prefitRes = preFitters[-1].GetFunction()
+
+                # save prefit results for fit parameter initialization
+                if(func['fixprefit']):
+                    lowBound = 1
+                    uppBound = 1
+                else:
+                    lowBound = 0.8
+                    uppBound = 1.2
+
+                if('spline3' in func['funcname']):
+                    nKnots = int(int(func['npars'])/2)
+                    for iPar in range(nKnots):
+                        initPars.append([f'xKnot{iPar}', prefitRes.GetParameter(iPar), 
+                                         prefitRes.GetParameter(iPar), prefitRes.GetParameter(iPar)])            
+                    for iPar in range(nKnots):
+                        initPars.append([f'yKnot{iPar}', prefitRes.GetParameter(iPar + nKnots), 
+                                         prefitRes.GetParameter(iPar + nKnots) * lowBound, prefitRes.GetParameter(iPar + nKnots) * uppBound])
+
+                else:
+                    for iPar in range(func['npars']):
+                        if(func[f'p{iPar}'][2] > func[f'p{iPar}'][3]):
+                            initPars.append([func[f'p{iPar}'][0], func[f'p{iPar}'][1], func[f'p{iPar}'][2], func[f'p{iPar}'][3]])
                         else:
-                            initPars.append([func[f'p{iPar}'][0], prefitRes.GetParameter(iPar), 
-                                             prefitRes.GetParameter(iPar) * uppBound, prefitRes.GetParameter(iPar) * lowBound])
+                            if(prefitRes.GetParameter(iPar) >= 0):
+                                initPars.append([func[f'p{iPar}'][0], prefitRes.GetParameter(iPar), 
+                                     prefitRes.GetParameter(iPar) * lowBound, prefitRes.GetParameter(iPar) * uppBound])
+                            else:
+                                initPars.append([func[f'p{iPar}'][0], prefitRes.GetParameter(iPar), 
+                                                 prefitRes.GetParameter(iPar) * uppBound, prefitRes.GetParameter(iPar) * lowBound])
 
         # no prefit case
         else:
+            #print('CIAO3')
             if('spline3' in func['funcname']):
                 for nKnot, xKnot in enumerate(func['xknots']):
                     initPars.append([f'xKnot{nKnot}', xKnot, xKnot, xKnot])
@@ -212,36 +218,105 @@ for nFit, fitcf in enumerate(cfg['fitcfs']):
                     initPars = [(func[f'p{iPar}'][0], func[f'p{iPar}'][1], func[f'p{iPar}'][2], 
                                  func[f'p{iPar}'][3]) for iPar in range(func['npars'])]
             
+            #if('prefitcomp' in func):
+            #    if(func['prefitcomp']):
+            #        prefitFile = TFile(func['prefitfile'])
+            #        prefitHisto = ChangeUnits(Load(prefitFile, func['prefitpath']), 1000)
+            #
+            #        # prefit function parameters initialization
+            #        lowPrefitRange = func['prefitrange'][0]
+            #        uppPrefitRange = func['prefitrange'][1]
+            #        
+            #        cfFitters[-1].PrefitComponent(func['compfuncname'], prefitHisto, initPars, lowPrefitRange, 
+            #                                      uppPrefitRange, func['startnewpar'])
+
+        #print('Init pars')
+        #print(initPars)
+
         if('lambdapar' in func):
             lambdaParam = [("lambdapar_" + func['funcname'], func['lambdapar'], 0, -1)]
             initPars = lambdaParam + initPars
+            print('ADDING FUNCTION')
+            print(initPars)
             cfFitters[-1].Add(func['funcname'], initPars, func['addmode'], func['onbaseline'])
         if('lambdagen' in func):
             lambdaGen = [("lambda_gen_" + func['funcname'], func['lambdagen'], 0, -1)]
             initPars = lambdaGen + initPars
+            print('ADDING FUNCTION')
+            print(initPars)            
             cfFitters[-1].Add(func['funcname'], initPars, func['addmode'], func['onbaseline'])
         if('norm' in func):
             normParam = [(func['norm'][0], func['norm'][1], func['norm'][2], func['norm'][3])]
             initPars = normParam + initPars
+            print('ADDING FUNCTION')
+            print(initPars)
             if('splinehisto' in func['funcname']):
                 cfFitters[-1].Add('pol0', initPars, func['addmode'],  func['onbaseline'])
             else:    
                 cfFitters[-1].Add(func['funcname'], initPars, func['addmode'], func['onbaseline'])
                 
     # perform the fit and save the result
-    cfFitters[-1].Fit()
-    cFit = TCanvas('cFit', '', 600, 600)
-    cfFitters[-1].Draw(cFit, fitcf['drawsumcomps'])
-    cfFitters[-1].DrawLegend(cFit, fitcf['legcoords'][0], fitcf['legcoords'][1], fitcf['legcoords'][2], fitcf['legcoords'][3],
-                             fitcf['legentries'])
     oFile.cd(fitcf['fitname'])
+    #cfFitters[-1].PrefitMC()
+    #cPrefit = TCanvas('cPrefit', '', 600, 600)
+    #cfFitters[-1].DrawPrefit(cPrefit)
+    #cPrefit.Write()
+    cfFitters[-1].BuildFitFunction()
+    for funcIdx, func in enumerate(fitcf['model']):
+        #print('CHECK PREFIT COMP')
+        if('prefitcomp' in func):
+            if(func['prefitcomp']):
+                #print('PREFITTING COMP')
+                prefitFile = TFile(func['prefitfile'])
+                prefitHisto = ChangeUnits(Load(prefitFile, func['prefitpath']), 1000)
+                lowPrefitRange = func['prefitrange'][0]
+                uppPrefitRange = func['prefitrange'][1]
+                lowRejectRange = func['rejectrange'][0]
+                uppRejectRange = func['rejectrange'][1]
+                startPar = func['startnewpar']
+                nParsComp = func['nparscomp']
+                compFuncName = func['compfuncname']
+                
+                cCompPrefit = TCanvas('cCompPrefit_' + func['funcname'], '', 600, 600)
+                #print('READY FOR THE COMPONENT PREFIT')
+                oFile.cd(fitcf['fitname'])
+                #print('CHANGED TO FILE DIRECTORY')
+                cfFitters[-1].PrefitComponent(cCompPrefit, prefitHisto, compFuncName, startPar, nParsComp, 
+                                              lowPrefitRange, uppPrefitRange, lowRejectRange, uppRejectRange)
+                #print('COMPONENT PREFITTED')
+                cCompPrefit.Write()
+                #print('WRITTEN TO FILE')
+    
+    print('READY FOR THE FIT')
+    oFile.cd(fitcf['fitname'])
+    cfFitters[-1].Fit().Write()
+    cFit = TCanvas('cFit', '', 600, 600)
+    if('drawsumcomps' in fitcf):
+        cfFitters[-1].Draw(cFit, fitcf['drawsumcomps'])
+    else:
+        cfFitters[-1].Draw(cFit)
+    cfFitters[-1].DrawLegend(cFit, fitcf['legcoords'][0], fitcf['legcoords'][1], fitcf['legcoords'][2], 
+                             fitcf['legcoords'][3], fitcf['legentries'])
     cFit.Write()
     dataCF.Write()
-    cfFitters[-1].GetFunction().Write()
-    pdfFileName = fitcf['fitname'] + cfg["suffix"] + ".pdf"
-    pdfFilePath = os.path.join(cfg['odir'], pdfFileName) 
-    cFit.SaveAs(pdfFilePath)
-    cfFitters[-1].Debug()
+    fitFunction = cfFitters[-1].GetFunction()
+    fitFunction.Write()
+    with open(oFileNameCfg, 'a') as file:
+        file.write('-----------------------------------')
+        file.write('\n')
+        file.write('Parameters obtained from the fit')    
+        file.write('\n')
+        for iPar in range(fitFunction.GetNpar()):
+            file.write(fitFunction.GetParName(iPar) + ": " + str(fitFunction.GetParameter(iPar)))
+            file.write('\n')
+    
+    print('Evaluation of the fit function: ' + str(cfFitters[-1].GetFunction().Eval(100)) )
+
+    #pdfFileName = fitcf['fitname'] + cfg["suffix"] + ".pdf"
+    #pdfFilePath = os.path.join(cfg['odir'], pdfFileName) 
+    #cFit.SaveAs(pdfFilePath)
+    #cfFitters[-1].Debug()
 
 oFile.Close()
+print(f'Config saved in {oFileNameCfg}')
 print(f'output saved in {oFileName}')

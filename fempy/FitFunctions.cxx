@@ -19,6 +19,15 @@ double Pol4(double *x, double *par) { return Pol3(x, par) + par[4] * pow(x[0], 4
 
 double Pol5(double *x, double *par) { return Pol4(x, par) + par[5] * pow(x[0], 5); }
 
+double FlatPol3(double *x, double *par) { 
+    return 1 + par[4] * (Pol3(x, par) - 1); 
+}
+
+double PowerLaw(double *x, double *par) { 
+    //return par[0] * TMath::Exp(-par[1] * x[0]) * Pol1(x, &par[2]); 
+    return par[0] + par[1] * TMath::Exp(-par[2] * x[0]) + Pol3(x, &par[3]); 
+}
+
 double Gaus(double *x, double *par) {
     double norm = 1. / TMath::Sqrt((2. * TMath::Pi())) / par[2];
     return norm * par[0] * TMath::Exp(-(x[0] - par[1]) * (x[0] - par[1]) / 2. / par[2] / par[2]);

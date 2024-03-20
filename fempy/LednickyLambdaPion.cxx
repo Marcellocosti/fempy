@@ -62,3 +62,6 @@ double ComplexLednicky_Singlet_doublegaussian_lambda(double *x, double *par)
     return sourcePar3 * (sourcePar2 * GeneralLednicky(kStar, sourcePar0, ScatLen, potPar2) 
            + (1 - sourcePar2) * GeneralLednicky(kStar, sourcePar1, ScatLen, potPar2)) + 1. - sourcePar3;
 }
+
+
+

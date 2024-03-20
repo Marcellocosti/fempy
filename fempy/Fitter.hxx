@@ -9,6 +9,7 @@
 #include "TFitResult.h"
 #include "TH1.h"
 #include "TMath.h"
+//#include "FitFunctions.cxx"
 
 class Fitter {
    public:
@@ -17,6 +18,22 @@ class Fitter {
         this->fFitRangeMin = fitRangeMin;
         this->fFitRangeMax = fitRangeMax;
         this->fNPars = {0};  // The first parameter has index zero
+
+        this->fFuncMap.insert({"pol0", Pol0});
+        this->fFuncMap.insert({"pol1", Pol1});
+        this->fFuncMap.insert({"pol2", Pol2});
+        this->fFuncMap.insert({"pol3", Pol3});
+        this->fFuncMap.insert({"pol4", Pol4});
+        this->fFuncMap.insert({"pol5", Pol5});
+        this->fFuncMap.insert({"gaus", Gaus});
+        this->fFuncMap.insert({"bw", BreitWigner});
+        this->fFuncMap.insert({"voigt", Voigt});
+        this->fFuncMap.insert({"landau", Landau});
+        this->fFuncMap.insert({"sillkstar", BreitWignerKStar});
+        this->fFuncMap.insert({"spline3", Spline3});
+        this->fFuncMap.insert({"spline3range", Spline3Range});
+        this->fFuncMap.insert({"powerlaw", PowerLaw});
+        this->fFuncMap.insert({"flatpol3", FlatPol3});
     }
 
     /*
@@ -39,59 +56,17 @@ class Fitter {
 
     It is your responsibility to give the correct number of parameters. All fit parameters must be initialized.
     */
-    void Add(std::string name, std::vector<std::tuple<std::string, double, double, double>> pars) {
-        // cout << "Number of parameters: ";
-        // cout << pars.size() << endl;
-
-        if (name == "pol0") {  // Constant function
-            this->fFitFunc.push_back(Pol0);
-            this->fFitFuncComps.push_back(name);
-        } else if (name == "pol1") {  // pol1
-            this->fFitFunc.push_back(Pol1);
-            this->fFitFuncComps.push_back(name);
-        } else if (name == "pol2") {  // pol2
-            this->fFitFunc.push_back(Pol2);
-            this->fFitFuncComps.push_back(name);
-        } else if (name == "pol3") {  // pol3
-            this->fFitFunc.push_back(Pol3);
-            this->fFitFuncComps.push_back(name);
-        } else if (name == "gaus") {  // Breit-Wigner function
-            this->fFitFunc.push_back(Gaus);
-            this->fFitFuncComps.push_back(name);
-        } else if (name == "bw") {    // Breit-Wigner function
-            this->fFitFunc.push_back(BreitWigner);
-            this->fFitFuncComps.push_back(name);
-        } else if (name == "voigt") { // Breit-Wigner function
-            this->fFitFunc.push_back(Voigt);
-            this->fFitFuncComps.push_back(name);
-        } else if (name == "spline3") { // Breit-Wigner function
-            this->fFitFunc.push_back(Spline3);
-            this->fFitFuncComps.push_back(name);
-        } else if (name == "ComplexLednicky_Singlet_doublegaussian_lambda") { // Complex Lednicky
-            this->fFitFunc.push_back(ComplexLednicky_Singlet_doublegaussian_lambda);
-            this->fFitFuncComps.push_back(name);
-        } else if (name == "landau") { // landau distribution
-            this->fFitFunc.push_back(Landau);
-            this->fFitFuncComps.push_back(name);
-        } else if (name == "sillkstar") { // breit wigner kstar dependent
-            this->fFitFunc.push_back(BreitWignerKStar);
-            this->fFitFuncComps.push_back(name);
-        } else if (name == "spline3range") { // spline3 in specific range
-            cout << "Specific Range!!" << endl;
-            this->fFitFunc.push_back(Spline3Range);
+    void Add(TString name, std::vector<std::tuple<std::string, double, double, double>> pars) {
+        cout << "ADDING FUNCTION!" << endl;
+        if(this->fFuncMap.find(name)!=this->fFuncMap.end()){
+            this->fFitFunc.push_back(this->fFuncMap[name]);
             this->fFitFuncComps.push_back(name);
         } else {
-            printf("Error: function '%s' is not implemented. Exit!", name.data());
+            printf("Error: function '%s' is not implemented. Exit!", name.Data());
             exit(1);
         }
 
-        //for(int iPar=0; iPar<pars.size(); iPar++) {
-        //    cout << "iSet parameter: " << pars << endl; //[iPar] << endl;//[0] << " " << pars[iPar][1] << " " << pars[iPar][2] << " " << pars[iPar][3] << endl;
-        //}
-
-        cout << "Number of parameters: " << pars.size() << endl;
         this->fNPars.push_back(pars.size());
-
         // Save fit settings
         for (const auto &par : pars) {
             this->fFitPars.insert({this->fFitPars.size(), par});
@@ -143,7 +118,6 @@ class Fitter {
         TF1 *funct = new TF1(Form("Comp %.0f", 0), Pol0, fFitRangeMin, fFitRangeMax, fNPars[0]);
         funct->SetParameter(0, this->fFit->GetParameter(0));
         return funct;
-
     } 
 
     /*
@@ -176,8 +150,8 @@ class Fitter {
             }
             cout << "Value of raw component at 1 MeV: " << components.back()->Eval(1) << endl;
             cout << "Multiplicative factor: " << this->fFit->GetParameter(setPars) << endl;
-            std::string funcName = this->fFitFuncComps[iFunc];
-            this->fFitFuncEval.push_back(new TF1(funcName.data(),
+            TString funcName = this->fFitFuncComps[iFunc];
+            this->fFitFuncEval.push_back(new TF1(funcName.Data(),
                 [&, this, iFunc, setPars, components](double *x, double *pars) {
                     return components[iFunc]->Eval(x[0]);},
                 fFitRangeMin, fFitRangeMax, 0));
@@ -265,9 +239,10 @@ class Fitter {
    private:
     TH1 *fHist = nullptr;
     TF1 *fFit = nullptr;
-    
+
+    std::map<TString, double (*)(double *x, double *par)> fFuncMap; // Map containing the implemented functions
     std::vector<double (*)(double *x, double *par)> fFitFunc;       // List of function describing each term of the CF model
-    std::vector<std::string> fFitFuncComps;       
+    std::vector<TString> fFitFuncComps;       
     std::vector<TF1*> fFitFuncEval;                                 // List of function describing each term of the CF model
     std::vector<int> fNPars;
 

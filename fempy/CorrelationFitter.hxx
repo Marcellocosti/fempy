@@ -34,7 +34,6 @@ class CorrelationFitter {
         this->fFuncMap.insert({"bw", BreitWigner});
         this->fFuncMap.insert({"voigt", Voigt});
         this->fFuncMap.insert({"ComplexLednicky_Singlet_doublegaussian_lambda", ComplexLednicky_Singlet_doublegaussian_lambda});
-        this->fFuncMap.insert({"landau", Landau});
         this->fFuncMap.insert({"sillkstar", BreitWignerKStar});
         this->fFuncMap.insert({"spline3", Spline3});
         this->fFuncMap.insert({"spline3range", Spline3Range});

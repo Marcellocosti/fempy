@@ -163,24 +163,6 @@ double Spline3Histo(double *x, double *par){
 
 }
 
- double Landau(double *x, double *par)
- {
-    // par[0]: norm
-    // par[1]: mean
-    // par[2]: sigma
-
-    //if (par[2] <= 0) return 0;
-    //double den = ::ROOT::Math::landau_pdf( (x[0]-par[1])/par[2] );
-    //if (!par[0]) return den;
-    //return den/par[2];
- 
-    if (par[2] <= 0) return 0;
-    double den = ::ROOT::Math::landau_pdf( (x[0]-par[1])/par[2] );
-    if (!par[0]) return den;
-    return par[0]*den;
- 
-}
-
 //Double_t Sill_WithPS(Double_t *x, Double_t *par) {
 //
 //  // x[0]: k*

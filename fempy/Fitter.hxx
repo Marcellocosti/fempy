@@ -74,13 +74,23 @@ class Fitter {
     }
 
     // Perform the fit
-    int Fit() {
+    int Fit(double rejectLow=0, double rejectUpp=0) {
+    
+        if(rejectLow < 0.0001) {
+            rejectLow = 1;
+        }
+        if(rejectUpp < 0.0001) {
+            rejectUpp = 0;
+        }
         // Build the fit function
         this->fFit = new TF1(
             "fFit",
             [&, this](double *x, double *pars) {
                 double result = 0;
                 for (int iTerm = 0; iTerm < this->fFitFunc.size(); iTerm++) {
+                    if (x[0] >= rejectLow && x[0] <= rejectUpp) {
+                        TF1::RejectPoint();
+                    }
                     auto func = this->fFitFunc[iTerm];
                     result += func(x, &pars[this->fNPars[iTerm]]);  // Shift the index of the parameters
                 }
@@ -160,7 +170,8 @@ class Fitter {
             cout << endl;
             this->fFitFuncEval[iFunc]->SetNpx(300);
             this->fFitFuncEval[iFunc]->SetLineColor(colors[iFunc]);
-            this->fFitFuncEval.back()->DrawF1(fFitRangeMin+1,fFitRangeMax,"same");
+            //this->fFitFuncEval.back()->DrawF1(fFitRangeMin+1,fFitRangeMax,"same");
+            this->fFitFuncEval.back()->DrawF1(fFitRangeMin,fFitRangeMax,"same");
             pad->Update();
         }
     

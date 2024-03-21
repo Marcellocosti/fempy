@@ -131,7 +131,11 @@ for comb in combs + ['p02_13', 'p03_12']:
             norm = hME[comb][region].GetEntries() / hSE[comb][region].GetEntries()
             normrew = hMErew[comb][region].GetEntries() / hSE[comb][region].GetEntries()
         else:
-            log.critical('Normalization method not implemented')
+            firstBin = hSE[comb][region].FindBin(cfg['norm'][0]*1.0001)
+            lastBin = hSE[comb][region].FindBin(cfg['norm'][1]*0.9999)
+            norm = hME[comb][region].Integral(firstBin, lastBin) / hSE[comb][region].Integral(firstBin, lastBin)
+            normrew = hMErew[comb][region].Integral(firstBin, lastBin) / hSE[comb][region].Integral(firstBin, lastBin)
+            #log.critical('Normalization method not implemented')
 
         hSE[comb][region].Sumw2()
         hME[comb][region].Sumw2() # Just to trigger the same draw option as for hSE
@@ -152,6 +156,7 @@ for comb in combs + ['p02_13', 'p03_12']:
         
         hMErew[comb][region].SetName('hMErew')
         hMErew[comb][region].SetTitle(';#it{k}* (GeV/#it{c});Counts')
+        hMErew[comb][region].Write()
 
         hCF.SetName('hCF')
         hCF.SetTitle(';#it{k}* (GeV/#it{c});#it{C}(#it{k}*)')

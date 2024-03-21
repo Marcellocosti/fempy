@@ -262,19 +262,3 @@ class Fitter {
 };
 
 #endif  // FEMPY_FITTER_HXX_
-
-
-//    void FitFunctsEval() {
-//        int nPar = 0;
-//        for(int iFunc=0; iFunc<fFitFunc.size(); iFunc++) {
-//            TF1 *iComp = new TF1(Form("Comp %.0f", 0), fFitFunc[iFunc], fFitRangeMin, fFitRangeMax, fNPars[iFunc+1]);
-//            for(int iPar=0; iPar<fNPars[iFunc+1]; iPar++) {
-//                // cout << this->fFit->GetParameter(nPar + iPar) << endl;
-//                iComp->SetParameter(iPar, this->fFit->GetParameter(nPar + iPar));
-//            }
-//            nPar += fNPars[iFunc+1];
-//            // cout << "Evaluated component!" << endl;
-//            fFitFuncEval.push_back(iComp);
-//        }
-//        // cout << fFitFuncEval.size() << endl;
-//    }

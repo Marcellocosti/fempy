@@ -28,7 +28,6 @@ class Fitter {
         this->fFuncMap.insert({"gaus", Gaus});
         this->fFuncMap.insert({"bw", BreitWigner});
         this->fFuncMap.insert({"voigt", Voigt});
-        this->fFuncMap.insert({"landau", Landau});
         this->fFuncMap.insert({"sillkstar", BreitWignerKStar});
         this->fFuncMap.insert({"spline3", Spline3});
         this->fFuncMap.insert({"spline3range", Spline3Range});

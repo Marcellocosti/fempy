@@ -121,10 +121,6 @@ class CorrelationFitter {
         this->fDrawOnBaseline.push_back(onbaseline);
         this->fNPars.push_back(pars.size());
         // Save fit settings
-        //if(addmode == "gammasum") {
-        //    std::tuple<std::string, double, double, double> gamma = {"gamma", 1, 0, -2};
-        //    pars.push_back(gamma);
-        //}
         for (const auto &par : pars) {
             //cout << std::get<0>(par) << " " << std::get<1>(par) << " " << std::get<2>(par) << " " << std::get<3>(par) << endl;
             this->fFitPars.insert({this->fFitPars.size(), par});
@@ -149,27 +145,6 @@ class CorrelationFitter {
         }
     }
 
-    // void PrefitMC() {
-    //     cout << fBaselineIdx << endl;
-    //     cout << this->fFitFunc.size() << endl;
-    //     cout << fNPars[fBaselineIdx+1] << endl;
-    //     this->fPrefitMC = new TF1(
-    //         "fPrefit",
-    //         [&, this](double *x, double *pars) -> double {
-    //             if (x[0] >= 150 && x[0] <= 300) {
-    //                 TF1::RejectPoint();
-    //                 return this->fFitFunc[2](x, pars);
-    //             } else {
-    //                 return this->fFitFunc[2](x, pars);
-    //             }
-    //         },
-    //         //80, 400, fNPars[fBaselineIdx+1]-1);
-    //         80, 1000, fNPars[fBaselineIdx+1]-1);
-    //     cout << fNPars[fBaselineIdx+1] << endl;
-    //     TFitResultPtr prefitResults = fMCHist->Fit(fPrefitMC, "SMR+0", "");
-    //     cout << fNPars[fBaselineIdx+1] << endl;
-    // }
-
     void PrefitComponent(TVirtualPad *pad, TH1 *histo, TString name, int startTotPar, int nPars, 
                          double lowFitRange, double uppFitRange, double lowReject=0, double uppReject=0) {
         if(lowReject < 0.0001) {
@@ -192,7 +167,6 @@ class CorrelationFitter {
                     return this->fFuncMap[name](x, pars);
                 }
             }, 0, uppFitRange, nPars);
-        //    }, lowFitRange, uppFitRange, nPars);
         for (size_t iPar = startTotPar; iPar < startTotPar + nPars; iPar++) {
             double lowParLimit;
             double uppParLimit;
@@ -220,7 +194,6 @@ class CorrelationFitter {
             cout << "iPar" << iPar + startTotPar << ": " << prefitCompFunc->GetParName(iPar) << " " << prefitCompFunc->GetParameter(iPar) << endl;
             this->fFit->SetParName(iPar + startTotPar, prefitCompFunc->GetParName(iPar));
             this->fFit->FixParameter(iPar + startTotPar, prefitCompFunc->GetParameter(iPar));
-            //this->fFit->SetParLimits(iPar + startTotPar, 0, -1);
         }
     
         cout << "End Fitting" << endl;
@@ -229,19 +202,12 @@ class CorrelationFitter {
         double yMinDraw = 0;
         double yMaxDraw = 1.3 * histo->GetMaximum();
         gPad->DrawFrame(0, yMinDraw, uppFitRange, yMaxDraw, ";k* (GeV/c); C(k*)");
-
-        //TCanvas *cPrefitComp = new TCanvas("cPrefitComp", "cPrefitComp", 600, 600);
-        //cPrefitComp->cd();
-        //gPad->DrawFrame(0, yMinDraw, uppFitRange, yMaxDraw, ";k* (GeV/c); C(k*)");
-        
+    
         prefitCompFunc->SetNpx(300);
         prefitCompFunc->SetLineColor(kRed);
         prefitCompFunc->SetLineWidth(3);
-        //prefitCompFunc->DrawF1(lowFitRange+1, uppFitRange, "same");
-        //prefitCompFunc->DrawCopy("same");
         prefitCompFunc->Clone()->Draw("same");
         cout << "Evaluation of prefitted component: " << prefitCompFunc->Eval(2) << endl;
-        //cPrefitComp->Update();
         pad->Update();
 
         histo->GetYaxis()->SetRangeUser(yMinDraw, yMaxDraw); 
@@ -251,11 +217,7 @@ class CorrelationFitter {
         histo->SetLineColor(kBlack);
         histo->SetLineWidth(3);
         histo->DrawCopy("same pe");
-        //cPrefitComp->Update();
         pad->Update();
-        cout << "Finish prefit" << endl;
-
-        //return cPrefitComp;
     }
 
     void BuildFitFunction() {
@@ -296,18 +258,9 @@ class CorrelationFitter {
                             if(fAddModes[iTerm] == "mult") {
                                 double partResult = result; 
                                 result = pars[nPar]*func(x, &pars[nPar+1])*partResult;
-                            // } else if (fAddModes[iTerm] == "gammasum") {
-                            //     double partResult = result; 
-                            //     result = pars[nPar]*(1 + (pars[nPar + this->fNPars[iTerm+1]]*func(x, &pars[nPar+1])-1))*partResult;
                             } else {
                                 result += pars[nPar]*func(x, &pars[nPar+1]);
                             }
-                            //if(fAddModes[iTerm] == "mult") {
-                            //    double partResult = result; 
-                            //    result = pars[nPar]*func(x, &pars[nPar+1])*partResult;
-                            //} else {
-                            //    result += pars[nPar]*func(x, &pars[nPar+1]);
-                            //}
                             nFuncComp++;
                         }                            
                     }
@@ -317,9 +270,6 @@ class CorrelationFitter {
                 fFitRangeMin, fFitRangeMax, this->fFitPars.size());
 
         int baselinePar = accumulate(fNPars.begin(), std::next(fNPars.begin(), fBaselineIdx), 0);
-
-        //for (size_t iPar = 0; iPar < this->fFitPars.size(); iPar++) {
-        
         //cout << "Total number of parameters " << this->fFitPars.size() << endl;
         //cout << "Baseline par " << baselinePar << endl;
         for (size_t iPar = 0; iPar < this->fFitPars.size(); iPar++) {
@@ -356,11 +306,8 @@ class CorrelationFitter {
                  << " " << lowParLimit << " " << uppParLimit << endl;
         }
 
-        cout << "Fitting" << endl;
         //int status = fDataHist->Fit(this->fFit, "SMR+0", "")->Status();
         TFitResultPtr fitResults = fDataHist->Fit(this->fFit, "SMR+0", "");
-        //TFitResultPtr fitResults = fDataHist->Fit(this->fFit, "LSMR+0", "");
-        cout << "End Fitting" << endl;
         return fitResults;
     }
 

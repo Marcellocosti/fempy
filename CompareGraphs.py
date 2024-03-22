@@ -95,9 +95,9 @@ for plot in cfg:
 
     for iObj, (inObj, legend) in enumerate(zip(inObjs, legends)):
         if isinstance(inObj, TGraph):
-            inObj.Draw('same p')
+            inObj.Draw('same ' + drawOpts[iObj])
         elif isinstance(inObj, TH1):
-            inObj.Draw("same pe")
+            inObj.Draw("same " + drawOpts[iObj])
 
         # Compute statistics for hist in the displayed range
         if isinstance(inObj, TH1):

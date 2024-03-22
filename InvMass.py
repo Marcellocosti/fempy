@@ -143,20 +143,20 @@ hInvMassSpline.Write('Data-MC_Spline')
 
 ############ INCLUDING PYTHIA SIMULATIONS ##############
 inFileXi1530 = TFile("/home/mdicostanzo/an/LPi/Simulation/outputs/NewSimStandalonePythia_MERGED.root")
-hXi1530 = Load(inFileXi1530, "_2113122_SMEARED/hSE_2113122_3324_SMEARED")
+hXi1530 = ChangeUnits(Load(inFileXi1530, "_2113122_SMEARED/hSE_2113122_3324_SMEARED"), 1000)
 thFistPrimYieldXi1530 = 0.027351
 # Charge factor
 BRrewYieldXi1530 = thFistPrimYieldXi1530 * (1/3)
 hXi1530.Scale(BRrewYieldXi1530/hXi1530.Integral())
 
 inFileLambda1520 = TFile("/home/mdicostanzo/an/LPi/DPG/SimLambda1520_KinemXi1530_42.root")
-hLambda1520 = Load(inFileLambda1520, "3122211_-3122-211_smeared")
+hLambda1520 = ChangeUnits(Load(inFileLambda1520, "3122211_-3122-211_smeared"), 1000)
 thFistPrimYieldLambda1520 = 0.0328154
 BRrewYieldLambda1520 = 0.0328154
 hLambda1520.Scale(BRrewYieldLambda1520/hLambda1520.Integral())
 
 inFileSigma1385Indir = TFile("/home/mdicostanzo/an/LPi/Simulation/outputs/SimSigma1385BkgNew.root")
-hSigma1385Indir = Load(inFileSigma1385Indir, "hSEPiPlusLambda")
+hSigma1385Indir = ChangeUnits(Load(inFileSigma1385Indir, "hSEPiPlusLambda"), 1000)
 # BR Sigma0 and charge factor
 thFistPrimYieldSigma1385 = 0.0578607
 BRrewYieldSigma1385 = 0.0578607 * (11.7/100) * (1/3)

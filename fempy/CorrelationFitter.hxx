@@ -239,9 +239,8 @@ class CorrelationFitter {
                         }
                         nFuncComp++;
                     }                            
+                    nPar += this->fNPars[iTerm+1];   
                 }
-                nPar += this->fNPars[iTerm+1];   
-            }
             return result;}, 
             fFitRangeMin, fFitRangeMax, this->fFitPars.size());
 

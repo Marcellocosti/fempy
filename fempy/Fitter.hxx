@@ -33,6 +33,7 @@ class Fitter {
         this->fFuncMap.insert({"spline3range", Spline3Range});
         this->fFuncMap.insert({"powerlaw", PowerLaw});
         this->fFuncMap.insert({"flatpol3", FlatPol3});
+        this->fFuncMap.insert({"sillkstar", SillKStar});
     }
 
     /*

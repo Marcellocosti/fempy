@@ -11,7 +11,6 @@
 #include "TMath.h"
 #include "TLegend.h"
 #include "TFitResultPtr.h"
-#include "LednickyLambdaPion.cxx"
 #include "FitFunctions.cxx"
 
 class CorrelationFitter {
@@ -39,6 +38,7 @@ class CorrelationFitter {
         this->fFuncMap.insert({"spline3range", Spline3Range});
         this->fFuncMap.insert({"powerlaw", PowerLaw});
         this->fFuncMap.insert({"flatpol3", FlatPol3});
+        this->fFuncMap.insert({"sillkstar", SillKStar});
     }
 
     void SetBaselineIdx(double basIdx) {
@@ -132,6 +132,7 @@ class CorrelationFitter {
         
         this->fAddModes.push_back(addmode);
         this->fDrawOnBaseline.push_back(onbaseline);
+        cout << "SPLINE NUMBER OF PARAMETERS: " << pars.size() << endl;
         this->fNPars.push_back(pars.size());
         // Save fit settings
         for (const auto &par : pars) {
@@ -179,7 +180,7 @@ class CorrelationFitter {
         //sillSigma1385->Draw("same");
         cSillFit->Write();
         sillFit->Close();
-        
+
         cout << "Component name: " << name << endl;
         TF1 *prefitCompFunc = new TF1(name,
             [&, this](double *x, double *pars) -> double {
@@ -329,10 +330,18 @@ class CorrelationFitter {
                         auto func = this->fFitSplines[nSplineComp];
                         if(fAddModes[iTerm] == "mult") {
                             double partResult = result; 
-                            result = pars[nPar]*this->fFitSplines[nSplineComp]->Eval(x[0])*partResult;
+                            if(this->fNPars[iTerm+1] == 2){
+                                result = pars[nPar]*this->fFitSplines[nSplineComp]->Eval(x[0] - pars[nPar+1])*partResult;
+                            } else {
+                                result = pars[nPar]*this->fFitSplines[nSplineComp]->Eval(x[0])*partResult;
+                            }
                         }
                         else {
-                            result += pars[nPar]*this->fFitSplines[nSplineComp]->Eval(x[0]);
+                            if(this->fNPars[iTerm+1] == 2){
+                                result += pars[nPar]*this->fFitSplines[nSplineComp]->Eval(x[0] - pars[nPar+1]);
+                            } else {
+                                result += pars[nPar]*this->fFitSplines[nSplineComp]->Eval(x[0]);
+                            }
                         }
                         nSplineComp++;
                     } else {
@@ -499,12 +508,19 @@ class CorrelationFitter {
         int setPars = 0;
         int iSpline = 0;
         int iFunc = 0;
+        cout << "Fit Function number of parameters: " << this->fFit->GetNpar() << endl;
         for(int iTerm=0; iTerm<nTerms; iTerm++) {
             std::string compName = static_cast<std::string>(this->fFitFuncComps[iTerm]);
+            cout << "Set par " << this->fFit->GetParameter(setPars) << endl;
+            cout << "Set par +1 " << this->fFit->GetParameter(setPars+1) << endl;
             if(this->fFitFuncComps[iTerm].Contains("spline")) {
                 components.push_back(new TF1(Form("iComp_%.0f", iTerm),
-                        [&, this, iSpline](double *x, double *pars) {
-                            return fFitSplines[iSpline]->Eval(x[0]);
+                        [&, this, iSpline, iTerm, setPars](double *x, double *pars) {
+                            if(this->fNPars[iTerm+1] == 2) {
+                                return fFitSplines[iSpline]->Eval(x[0] - this->fFit->GetParameter(setPars+1));
+                            } else {
+                                return fFitSplines[iSpline]->Eval(x[0]);
+                            }
                         }, fFitRangeMin, fFitRangeMax, 0));
                 iSpline++;
             } else {
@@ -556,7 +572,7 @@ class CorrelationFitter {
                             }
                         }
                         if(addBaseline) {
-                            sum +=  this->fNorms[this->fBaselineIdx]*components[this->fBaselineIdx]->Eval(x[0]);
+                            sum += this->fNorms[this->fBaselineIdx]*components[this->fBaselineIdx]->Eval(x[0]);
                         }
                         return sum;}, fFitRangeMin, fFitRangeMax, 0));
             }

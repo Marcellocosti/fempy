@@ -139,7 +139,7 @@ class CorrelationFitter {
         }
     }
 
-    void PrefitComponent(TVirtualPad *pad, TH1 *histo, TString name, int startTotPar, int nPars, 
+    void PrefitComponent(TVirtualPad *pad, TH1 *histo, TH1 *histoSpline, TString name, int startTotPar, int nPars, 
                          double lowFitRange, double uppFitRange, double lowReject=0, double uppReject=0) {
         if(lowReject < 0.0001) {
             lowReject = uppFitRange;
@@ -148,19 +148,56 @@ class CorrelationFitter {
             uppReject = lowFitRange;
         }
         
+        TH1D *splineHisto = static_cast<TH1D*>(histoSpline);
+        splineHisto->Rebin(2);
+        TSpline3* spSigma1385 = new TSpline3(histoSpline);
+
+        TFile *sillFit = new TFile("~/an/LPi/SillFit.root", "recreate");
+        // histoSpline->Scale(1/histoSpline->Integral());
+        // cout << "Component name: " << name << endl;
+        // TF1 *sillSigma1385 = new TF1("sillSigma1385", this->fFuncMap["sillkstar"], 0, 6000, 3);
+        // cout << "Parameter initialization for fit" << endl;
+        // sillSigma1385->SetParName(0, "normsill");
+        // sillSigma1385->FixParameter(0, 3);
+        // //sillSigma1385->SetParLimits(0, 0, 100000000);
+        // cout << "0: " << sillSigma1385->GetParName(0) << " " << sillSigma1385->GetParameter(0) << endl;
+        // sillSigma1385->SetParName(1, "widthsill");
+        // sillSigma1385->FixParameter(1, 5);
+        // //sillSigma1385->SetParLimits(1, 0, 600000);
+        // cout << "1: " << sillSigma1385->GetParName(1) << " " << sillSigma1385->GetParameter(1) << endl;
+        // sillSigma1385->SetParName(2, "masssill");
+        // sillSigma1385->FixParameter(2, 1385);
+        // //sillSigma1385->SetParLimits(2, 0, 10000);
+        // cout << "2: " << sillSigma1385->GetParName(2) << " " << sillSigma1385->GetParameter(2) << endl;
+        // cout << "Eval: " << sillSigma1385->Eval(100) << endl;
+        
+        // int statusSillFit = splineHisto->Fit(sillSigma1385, "SMR+0", "")->Status();
+        // sillFit->cd();
+        TCanvas *cSillFit = new TCanvas("cSillFit", "cSillFit", 600, 600);
+        splineHisto->Draw();
+        spSigma1385->Draw("same");
+        //sillSigma1385->Draw("same");
+        cSillFit->Write();
+        sillFit->Close();
+        
         cout << "Component name: " << name << endl;
         TF1 *prefitCompFunc = new TF1(name,
             [&, this](double *x, double *pars) -> double {
                 if (x[0] >= lowReject && x[0] <= uppReject) {
                     TF1::RejectPoint();
-                    return this->fFuncMap[name](x, pars);
+                    //return this->fFuncMap[name](x, pars) + pars[nPars]*spSigma1385->Eval(x[0]);                    
+                    return this->fFuncMap[name](x, pars) + pars[nPars]*this->fFuncMap["sillkstar"](x, &pars[nPars+1]);
                 } else if (x[0] < lowFitRange) {
                     TF1::RejectPoint();
-                    return this->fFuncMap[name](x, pars);
+                    //return this->fFuncMap[name](x, pars) + pars[nPars]*spSigma1385->Eval(x[0]);                    
+                    return this->fFuncMap[name](x, pars) + pars[nPars]*this->fFuncMap["sillkstar"](x, &pars[nPars+1]);
                 } else {
-                    return this->fFuncMap[name](x, pars);
+                    //return this->fFuncMap[name](x, pars) + pars[nPars]*spSigma1385->Eval(x[0]);                    
+                    return this->fFuncMap[name](x, pars) + pars[nPars]*this->fFuncMap["sillkstar"](x, &pars[nPars+1]);
                 }
-            }, 0, uppFitRange, nPars);
+            //}, 0, uppFitRange, nPars+4);
+            }, 0, uppFitRange, nPars+1);
+
         for (size_t iPar = startTotPar; iPar < startTotPar + nPars; iPar++) {
             double lowParLimit;
             double uppParLimit;
@@ -173,6 +210,41 @@ class CorrelationFitter {
             prefitCompFunc->SetParLimits(iPar, lowParLimit, uppParLimit);
         }
 
+        //prefitCompFunc->SetParName(nPars, "normsill");
+        //prefitCompFunc->SetParameter(nPars, 0.000001);
+        //prefitCompFunc->SetParLimits(nPars, 0.00000001, 0.0001);
+        //cout << "Setting parameters for prefit component" << endl;
+        //cout << "iPar" << nPars << ": " << prefitCompFunc->GetParName(nPars) << " " << prefitCompFunc->GetParameter(nPars) << endl;
+
+        //for (size_t iPar = 1; iPar < prefitCompFunc->GetNpar() - nPars; iPar++) {
+        //    double lowParLimit;
+        //    double uppParLimit;
+        //    sillSigma1385->GetParLimits(iPar-1, lowParLimit, uppParLimit);
+        //    cout << "Setting parameters for prefit component" << endl;
+        //    cout << "iPar" << iPar << ": " << sillSigma1385->GetParName(iPar-1) << " " << sillSigma1385->GetParameter(iPar-1) << endl;
+        //    prefitCompFunc->SetParName(iPar+nPars, sillSigma1385->GetParName(iPar-1));
+        //    prefitCompFunc->SetParameter(iPar+nPars, sillSigma1385->GetParameter(iPar-1));
+        //    prefitCompFunc->SetParLimits(iPar+nPars, lowParLimit, uppParLimit);
+        //}
+    
+        cout << endl;
+
+        for (size_t iPar = 0; iPar < prefitCompFunc->GetNpar(); iPar++) {
+            double lowParLimit;
+            double uppParLimit;
+            prefitCompFunc->GetParLimits(iPar, lowParLimit, uppParLimit);
+            cout << "Parameters for prefit" << endl;
+            cout << "iPar" << iPar << ": " << prefitCompFunc->GetParName(iPar) << " " << prefitCompFunc->GetParameter(iPar) 
+                 << " " << lowParLimit << " " << uppParLimit << endl;
+        }
+
+        cout << "Setting parameters for prefit component" << endl;
+        cout << "iPar" << nPars+1 << ": " << "splinenorm" << " " << 0.000001 
+             << " " << 0.00000001 << " " << 0.00001 << endl;
+        prefitCompFunc->SetParName(nPars+1, "splinenorm");
+        prefitCompFunc->SetParLimits(nPars+1, 0.00000001, 0.00001);
+
+        //fMCHist->Rebin(2);
         int status = fMCHist->Fit(prefitCompFunc, "SMR+0", "")->Status();
 
         for (size_t iPar = 0; iPar < nPars; iPar++) {
@@ -185,6 +257,22 @@ class CorrelationFitter {
             this->fFit->FixParameter(iPar + startTotPar, prefitCompFunc->GetParameter(iPar));
         }
 
+        TF1 *prefitPol3 = new TF1("pol3",
+            [&, this](double *x, double *pars) -> double {
+                return this->fFuncMap["pol3"](x, pars);
+            }, 0, uppFitRange, nPars+1);
+
+        prefitPol3->SetParameter(0, prefitCompFunc->GetParameter(0));
+        prefitPol3->SetParameter(1, prefitCompFunc->GetParameter(1));
+        prefitPol3->SetParameter(2, prefitCompFunc->GetParameter(2));
+        prefitPol3->SetParameter(3, prefitCompFunc->GetParameter(3));
+
+        TF1 *prefitSplinedHisto = new TF1("splinedhisto",
+            [&, this](double *x, double *pars) -> double {
+                //return prefitPol3->Eval(x[0]) + prefitCompFunc->GetParameter(nPars)*spSigma1385->Eval(x[0]);
+                return 0.9 + prefitCompFunc->GetParameter(nPars)*spSigma1385->Eval(x[0]);
+            }, 0, uppFitRange, 0);
+
         pad->cd();
         double yMinDraw = 0;
         double yMaxDraw = 1.3 * histo->GetMaximum();
@@ -194,6 +282,24 @@ class CorrelationFitter {
         prefitCompFunc->SetLineColor(kRed);
         prefitCompFunc->SetLineWidth(3);
         prefitCompFunc->Clone()->Draw("same");
+        pad->Update();
+
+        prefitSplinedHisto->SetNpx(300);
+        prefitSplinedHisto->SetLineColor(kGreen);
+        prefitSplinedHisto->SetLineWidth(3);
+        prefitSplinedHisto->Clone()->Draw("same");
+        pad->Update();
+
+        //sillSigma1385->SetNpx(300);
+        //sillSigma1385->SetLineColor(kMagenta);
+        //sillSigma1385->SetLineWidth(3);
+        //sillSigma1385->Clone()->Draw("same");
+        //pad->Update();
+
+        prefitPol3->SetNpx(300);
+        prefitPol3->SetLineColor(kBlue);
+        prefitPol3->SetLineWidth(3);
+        prefitPol3->Clone()->Draw("same");
         pad->Update();
 
         histo->GetYaxis()->SetRangeUser(yMinDraw, yMaxDraw); 

@@ -163,7 +163,38 @@ double Spline3Histo(double *x, double *par){
 
 }
 
-//Double_t Sill_WithPS(Double_t *x, Double_t *par) {
+double SillKStar(double *x, double *par) {
+
+  // x[0]: k*
+  // par: [0] "normalisation" constant
+  //      [1] width
+  //      [2] mass
+
+  if (x[0] < 0)
+    return 0;
+
+  double kstar = x[0];
+  double massPion = 139.570;
+  double massLambda = 1115.683;
+  double thresh = massPion + massLambda;
+
+  double motherMass = sqrt(kstar * kstar + massPion * massPion) + sqrt(kstar * kstar + massLambda * massLambda);
+
+  if (motherMass < thresh)
+    return 0;
+
+  double width = par[1] * par[2] / sqrt(par[2] * par[2] - thresh * thresh);
+  double arg0 = 2 * motherMass / TMath::Pi();
+  double arg1 = sqrt(motherMass * motherMass - thresh * thresh) * width;
+  double arg2 = pow(motherMass * motherMass - par[2] * par[2], 2.);
+  double arg3 = pow(sqrt(motherMass * motherMass - thresh * thresh) * width, 2.);
+
+  double jacobian = kstar / sqrt(kstar * kstar + massPion * massPion) + kstar / sqrt(kstar * kstar + massLambda * massLambda);
+  return (par[0] * arg0 * arg1 / (arg2 + arg3)) * abs(jacobian);
+}
+
+
+//double Sill_WithPS(double *x, double *par) {
 //
 //  // x[0]: k*
 //  // par: [0] "normalisation" constant

@@ -1,11 +1,13 @@
 #include <map>
 #include <string>
 #include <tuple>
+#include <complex>
 
 #include "TF1.h"
 #include "TFitResult.h"
 #include "TH1.h"
 #include "TMath.h"
+#include "gsl/gsl_sf_dawson.h"
 
 double Pol0(double *x, double *par) { return par[0]; }
 
@@ -106,7 +108,7 @@ double Exp(double *x, double *par) {
 double PowEx(double *x, double *par) {
     // p0: total yield
     // p1: slope
-    Double_t mpi = TDatabasePDG::Instance()->GetParticle(211)->Mass();
+    double mpi = TDatabasePDG::Instance()->GetParticle(211)->Mass();
 
     if (x[0] < mpi) return 0;
     return par[0] * TMath::Sqrt(x[0] - mpi) * TMath::Exp(-1. * par[1] * (x[0] - mpi));
@@ -114,8 +116,8 @@ double PowEx(double *x, double *par) {
 
 double Spline3(double *x, double *par){
     int numKnots = 10;
-    Double_t xKnots[numKnots];
-    Double_t yKnots[numKnots];
+    double xKnots[numKnots];
+    double yKnots[numKnots];
     for(int iKnot=0; iKnot<numKnots; iKnot++){
         xKnots[iKnot] = par[iKnot];
         yKnots[iKnot] = par[numKnots+iKnot];
@@ -126,8 +128,8 @@ double Spline3(double *x, double *par){
 
 double Spline5(double *x, double *par){
     int numKnots = 6;
-    Double_t xKnots[numKnots];
-    Double_t yKnots[numKnots];
+    double xKnots[numKnots];
+    double yKnots[numKnots];
     for(int iKnot=0; iKnot<numKnots; iKnot++){
         xKnots[iKnot] = par[iKnot];
         yKnots[iKnot] = par[numKnots+iKnot];
@@ -138,8 +140,8 @@ double Spline5(double *x, double *par){
 
 double Spline3Range(double *x, double *par){
     int numKnots = 10;
-    Double_t xKnots[numKnots];
-    Double_t yKnots[numKnots];
+    double xKnots[numKnots];
+    double yKnots[numKnots];
     for(int iKnot=0; iKnot<numKnots; iKnot++){
         xKnots[iKnot] = par[iKnot];
         yKnots[iKnot] = par[numKnots+iKnot];
@@ -203,31 +205,31 @@ double SillKStar(double *x, double *par) {
 //  //      [3] resonance pT
 //  //      [4] kinetic decoupling temperature
 //
-//  Double_t LambdaFactor = 290;
+//  double LambdaFactor = 290;
 //
 //  if (x[0] < 0)
 //    return 0;
 //
 //  // double t = x[0];
 //
-//  Double_t kstar = x[0];
-//  Double_t Thresh = MassPion + MassProton;
+//  double kstar = x[0];
+//  double Thresh = MassPion + MassProton;
 //
 //  double MotherMass = sqrt(kstar * kstar + MassPion * MassPion) + sqrt(kstar * kstar + MassProton * MassProton);
 //
 //  if (MotherMass < Thresh)
 //    return 0;
 //
-//  Double_t Width = par[1] * par[2] / sqrt(par[2] * par[2] - Thresh * Thresh);
-//  Double_t arg0 = 2 * MotherMass / TMath::Pi();
-//  Double_t arg1 = sqrt(MotherMass * MotherMass - Thresh * Thresh) * Width;
-//  Double_t arg2 = pow(MotherMass * MotherMass - par[2] * par[2], 2.);
-//  Double_t arg3 = pow(sqrt(MotherMass * MotherMass - Thresh * Thresh) * Width, 2.);
+//  double width = par[1] * par[2] / sqrt(par[2] * par[2] - Thresh * Thresh);
+//  double arg0 = 2 * MotherMass / TMath::Pi();
+//  double arg1 = sqrt(MotherMass * MotherMass - Thresh * Thresh) * width;
+//  double arg2 = pow(MotherMass * MotherMass - par[2] * par[2], 2.);
+//  double arg3 = pow(sqrt(MotherMass * MotherMass - Thresh * Thresh) * width, 2.);
 //
-//  Double_t ResonancePt = par[3];
-//  Double_t Temperature = par[4]; // orignal paper 160
-//  Double_t PhaseSpace = (MotherMass / sqrt(MotherMass * MotherMass + ResonancePt * ResonancePt)) * exp(-sqrt(MotherMass * MotherMass + ResonancePt * ResonancePt) / Temperature);
-//  Double_t PhaseSpaceNorm = exp(-sqrt(Thresh * Thresh + ResonancePt * ResonancePt) / Temperature) * Temperature;
+//  double ResonancePt = par[3];
+//  double Temperature = par[4]; // orignal paper 160
+//  double PhaseSpace = (MotherMass / sqrt(MotherMass * MotherMass + ResonancePt * ResonancePt)) * exp(-sqrt(MotherMass * MotherMass + ResonancePt * ResonancePt) / Temperature);
+//  double PhaseSpaceNorm = exp(-sqrt(Thresh * Thresh + ResonancePt * ResonancePt) / Temperature) * Temperature;
 //
 //  // return (par[0]*arg0*arg1/(arg2 + arg3))*PhaseSpace/(PhaseSpaceNorm*ME_Value); // *abs(Derivative_dM_dkStar(kstar));
 //

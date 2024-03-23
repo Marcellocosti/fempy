@@ -104,7 +104,11 @@ for nFit, fitcf in enumerate(cfg['fitcfs']):
             splinedHisto = ChangeUnits(Load(histoFile, func['histopath']), 1000)
             if('rebin' in func):
                 splinedHisto.Rebin(func['rebin'])
-            initPars = [(func['norm'][0], func['norm'][1], func['norm'][2], func['norm'][3])]
+            if('p0' in func):
+                initPars = [(func['norm'][0], func['norm'][1], func['norm'][2], func['norm'][3]),
+                            (func['p0'][0], func['p0'][1], func['p0'][2], func['p0'][3])]
+            else:
+                initPars = [(func['norm'][0], func['norm'][1], func['norm'][2], func['norm'][3])]
             cfFitters[-1].AddSplineHisto(func['funcname'], splinedHisto, initPars, func['addmode'], func['onbaseline'])
             cSplinedHisto = TCanvas(f'c{func["funcname"]}', '', 600, 600)
             cfFitters[-1].DrawSpline(cSplinedHisto, splinedHisto)
@@ -241,10 +245,13 @@ for nFit, fitcf in enumerate(cfg['fitcfs']):
                 startPar = func['startnewpar']
                 nParsComp = func['nparscomp']
                 compFuncName = func['compfuncname']
+                if('addhistopath' in func):
+                    addHistoFile = TFile(func['addhistofile'])
+                    prefitHistoSpline = ChangeUnits(Load(addHistoFile, func['addhistopath']), 1000)
                 
                 cCompPrefit = TCanvas('cCompPrefit_' + func['funcname'], '', 600, 600)
                 oFile.cd(fitcf['fitname'])
-                cfFitters[-1].PrefitComponent(cCompPrefit, prefitHisto, compFuncName, startPar, nParsComp, 
+                cfFitters[-1].PrefitComponent(cCompPrefit, prefitHisto, prefitHistoSpline, compFuncName, startPar, nParsComp, 
                                               lowPrefitRange, uppPrefitRange, lowRejectRange, uppRejectRange)
                 cCompPrefit.Write()
     

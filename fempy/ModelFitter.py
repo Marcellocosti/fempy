@@ -59,7 +59,7 @@ with open(args.cfg, 'r') as file:
         if(firstNonBlankChar == '#'): continue
         fileLines.append(line.rstrip())  # Strip to remove leading/trailing whitespaces
 
-oFileNameCfg = '/home/mdicostanzo/an/LPi/fitstry/' + oFileBaseName + '_cfg.txt' 
+oFileNameCfg = os.path.join(cfg['odir'], oFileBaseName + '_cfg.txt')
 with open(oFileNameCfg, 'w') as file:
     for line in fileLines:
         file.write(line)
@@ -188,9 +188,9 @@ for nFit, fitcf in enumerate(cfg['fitcfs']):
             file.write(fitFunction.GetParName(iPar) + ": " + str(fitFunction.GetParameter(iPar)))
             file.write('\n')
     
-    pdfFileName = fitcf['fitname'] + cfg["suffix"] + ".pdf"
-    pdfFilePath = os.path.join(cfg['odir'], pdfFileName) 
-    cFit.SaveAs(pdfFilePath)
+    #pdfFileName = fitcf['fitname'] + cfg["suffix"] + ".pdf"
+    #pdfFilePath = os.path.join(cfg['odir'], pdfFileName) 
+    #cFit.SaveAs(pdfFilePath)
 
 oFile.Close()
 print(f'Config saved in {oFileNameCfg}')

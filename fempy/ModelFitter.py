@@ -12,8 +12,8 @@ import argparse
 import yaml
 
 from ROOT import TFile, TCanvas, gInterpreter, TF1, TDatabasePDG
-gInterpreter.ProcessLine(f'#include "{os.environ.get("FEMPY")}fempy/CorrelationFitterNew.hxx"')
-from ROOT import CorrelationFitterNew
+gInterpreter.ProcessLine(f'#include "{os.environ.get("FEMPY")}fempy/ModelFitter.hxx"')
+from ROOT import ModelFitter
 
 from fempy import logger as log
 from fempy.utils.io import Load
@@ -79,9 +79,9 @@ for nFit, fitcf in enumerate(cfg['fitcfs']):
     if('rejectrange' in fitcf):
         lowRejectRange = fitcf['rejectrange'][0]
         uppRejectRange = fitcf['rejectrange'][1]
-        modelFitters.append(CorrelationFitterNew(fitHisto, lowFitRange, uppFitRange, lowRejectRange, uppRejectRange))
+        modelFitters.append(ModelFitter(fitHisto, lowFitRange, uppFitRange, lowRejectRange, uppRejectRange))
     else: 
-        modelFitters.append(CorrelationFitterNew(fitHisto, lowFitRange, uppFitRange))
+        modelFitters.append(ModelFitter(fitHisto, lowFitRange, uppFitRange))
         
     # directory of the fit
     oFile.mkdir(fitcf['fitname'])

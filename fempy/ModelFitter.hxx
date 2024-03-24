@@ -1,5 +1,5 @@
-#ifndef FEMPY_CORRELATIONFITTERNEW_HXX_
-#define FEMPY_CORRELATIONFITTERNEW_HXX_
+#ifndef FEMPY_MODELFITTER_HXX_
+#define FEMPY_MODELFITTER_HXX_
 
 #include <map>
 #include <string>
@@ -14,9 +14,9 @@
 #include "TFitResultPtr.h"
 #include "FitFunctions.cxx"
 
-class CorrelationFitterNew {
+class ModelFitter {
    public:
-    CorrelationFitterNew(TH1 *fithist, double fitRangeMin, double fitRangeMax, 
+    ModelFitter(TH1 *fithist, double fitRangeMin, double fitRangeMax, 
                          double rejectMin=0, double rejectMax=-1) {
         this->fFitHist = reinterpret_cast<TH1 *>(fithist->Clone());
         this->fFitRangeMin = fitRangeMin;
@@ -24,24 +24,7 @@ class CorrelationFitterNew {
         this->fRejectMin = rejectMin;
         this->fRejectMax = rejectMax;
         this->fNPars = {0};  // The first parameter has index zero
-
-        this->fFuncMap = functions;
-        //this->fFuncMap.insert({"pol0", Pol0});
-        //this->fFuncMap.insert({"pol1", Pol1});
-        //this->fFuncMap.insert({"pol2", Pol2});
-        //this->fFuncMap.insert({"pol3", Pol3});
-        //this->fFuncMap.insert({"pol4", Pol4});
-        //this->fFuncMap.insert({"pol5", Pol5});
-        //this->fFuncMap.insert({"gaus", Gaus});
-        //this->fFuncMap.insert({"bw", BreitWigner});
-        //this->fFuncMap.insert({"voigt", Voigt});
-        //this->fFuncMap.insert({"ComplexLednicky_Singlet_doublegaussian_lambda", ComplexLednicky_Singlet_doublegaussian_lambda});
-        //this->fFuncMap.insert({"sillkstar", BreitWignerKStar});
-        //this->fFuncMap.insert({"spline3", Spline3});
-        //this->fFuncMap.insert({"spline3range", Spline3Range});
-        //this->fFuncMap.insert({"powerlaw", PowerLaw});
-        //this->fFuncMap.insert({"flatpol3", FlatPol3});
-        //this->fFuncMap.insert({"sillkstar", SillKStar});
+        //this->fFuncMap = functions;
     }
 
     void SetBaselineIdx(double basIdx) {
@@ -123,8 +106,12 @@ class CorrelationFitterNew {
     */
 
     void Add(TString name, std::vector<std::tuple<std::string, double, double, double>> pars, std::string addmode, bool onbaseline) {
-        if(this->fFuncMap.find(name)!=this->fFuncMap.end()){
-            this->fFitFunc.push_back(this->fFuncMap[name]);
+        //if(this->fFuncMap.find(name)!=this->fFuncMap.end()){
+        //    this->fFitFunc.push_back(this->fFuncMap[name]);
+        //    this->fFitFuncComps.push_back(name);
+        //}
+        if(functions.find(name)!=functions.end()){
+            this->fFitFunc.push_back(functions[name]);
             this->fFitFuncComps.push_back(name);
         } else {
             printf("Error: function '%s' is not implemented. Exit!", name.Data());
@@ -472,9 +459,8 @@ class CorrelationFitterNew {
     TH1 *fFitHist = nullptr;
     TF1 *fFit = nullptr;
 
-    std::map<TString, double (*)(double *x, double *par)> fFuncMap; // Map containing the implemented functions
+    //std::map<TString, double (*)(double *x, double *par)> fFuncMap; // Map containing the implemented functions
     std::vector<double (*)(double *x, double *par)> fFitFunc;       // List of function describing each term of the CF model
-    double (*fBaseline)(double *x, double *par);                    // Baseline function (for drawing purposes)
     double fBaselineIdx;                                            // Index of baseline function element
     std::vector<TString> fFitFuncComps;                             // Function names of fit components
     std::vector<bool> fDrawOnBaseline;                              // Options to draw fit components on the baseline function
@@ -493,4 +479,4 @@ class CorrelationFitterNew {
     std::map<int, std::tuple<std::string, double, double, double>> fFitNorms;   // List of fit parameters
 };
 
-#endif  // FEMPY_CORRELATIONFITTERNEW_HXX_
+#endif  // FEMPY_MODELFITTER_HXX_

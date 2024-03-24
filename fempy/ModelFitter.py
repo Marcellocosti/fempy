@@ -11,7 +11,7 @@ import os
 import argparse
 import yaml
 
-from ROOT import TFile, TCanvas, gInterpreter, TF1, TDatabasePDG
+from ROOT import TFile, TCanvas, gInterpreter, TH1D
 gInterpreter.ProcessLine(f'#include "{os.environ.get("FEMPY")}fempy/ModelFitter.hxx"')
 from ROOT import ModelFitter
 
@@ -69,7 +69,7 @@ modelFitters = []
 
 # for loop over the correlation functions
 for nFit, fitcf in enumerate(cfg['fitcfs']):
-
+    
     # change unity of measure of histograms from GeV to MeV
     fitHisto = ChangeUnits(Load(inFileFit, fitcf['cfpath']), 1000)
 
@@ -116,15 +116,15 @@ for nFit, fitcf in enumerate(cfg['fitcfs']):
             oFile.cd(fitcf['fitname'])
             cSplinedHisto.Write()
             
-        elif('TF1' in func['funcname']):
-            histoFile = TFile(func['TF1file'])
-            fixedTF1 = Load(histoFile, func['TF1path'])
-            initPars = [(func['norm'][0], func['norm'][1], func['norm'][2], func['norm'][3])]
-            modelFitters[-1].AddTF1(func['funcname'], fixedTF1, initPars, func['addmode'], func['onbaseline'])
-            cFixedTF1 = TCanvas(f'c{func["funcname"]}', '', 600, 600)
-            modelFitters[-1].DrawTF1Comp(cFixedTF1, fixedTF1)
-            oFile.cd(fitcf['fitname'])
-            cFixedTF1.Write()
+        #elif('TF1' in func['funcname']):
+        #    funcFile = TFile(func['TF1file'])
+        #    fixedTF1 = Load(funcFile, func['TF1path'])
+        #    initPars = [(func['norm'][0], func['norm'][1], func['norm'][2], func['norm'][3])]
+        #    modelFitters[-1].AddTF1(func['funcname'], fixedTF1, initPars, func['addmode'], func['onbaseline'])
+        #    cFixedTF1 = TCanvas(f'c{func["funcname"]}', '', 600, 600)
+        #    modelFitters[-1].DrawTF1Comp(cFixedTF1, fixedTF1)
+        #    oFile.cd(fitcf['fitname'])
+        #    cFixedTF1.Write()
         
         else:  
             if('spline3' in func['funcname']):
@@ -135,7 +135,13 @@ for nFit, fitcf in enumerate(cfg['fitcfs']):
                     yKnot = prefitHisto.GetBinContent(nBin)
                     initPars.append([f'yKnot{nKnot}', yKnot, yKnot - (yKnot/100)*30, yKnot + (yKnot/100)*30])
             else:
-                print(func)
+                if('fixparsfromfuncts' in func):
+                    histoFuncFile = TFile(func['histofuncfile'])
+                    histoFuncParams = Load(histoFuncFile, func['histofuncpath'])
+                    for iPar in func['fixparsfromfuncts']:
+                        func[f'p{iPar[0]}'] = [f'p{iPar[0]}_prefit', 
+                                               histoFuncParams.GetBinContent(iPar[1]), 0, -1]
+
                 initPars = [(func[f'p{iPar}'][0], func[f'p{iPar}'][1], func[f'p{iPar}'][2], 
                              func[f'p{iPar}'][3]) for iPar in range(func['npars'])]
 
@@ -155,29 +161,6 @@ for nFit, fitcf in enumerate(cfg['fitcfs']):
     # perform the fit and save the result
     oFile.cd(fitcf['fitname'])
     modelFitters[-1].BuildFitFunction()
-    for funcIdx, func in enumerate(fitcf['model']):
-        if('prefitcomp' in func):
-            if(func['prefitcomp']):
-                prefitFile = TFile(func['prefitfile'])
-                prefitHisto = ChangeUnits(Load(prefitFile, func['prefitpath']), 1000)
-                lowPrefitRange = func['prefitrange'][0]
-                uppPrefitRange = func['prefitrange'][1]
-                lowRejectRange = func['rejectrange'][0]
-                uppRejectRange = func['rejectrange'][1]
-                startPar = func['startnewpar']
-                nParsComp = func['nparscomp']
-                compFuncName = func['compfuncname']
-                if('addhistopath' in func):
-                    addHistoFile = TFile(func['addhistofile'])
-                    prefitHistoSpline = ChangeUnits(Load(addHistoFile, func['addhistopath']), 1000)
-                
-                cCompPrefit = TCanvas('cCompPrefit_' + func['funcname'], '', 600, 600)
-                oFile.cd(fitcf['fitname'])
-                modelFitters[-1].PrefitComponent(cCompPrefit, prefitHisto, prefitHistoSpline, compFuncName, startPar, nParsComp, 
-                                              lowPrefitRange, uppPrefitRange, lowRejectRange, uppRejectRange)
-                cCompPrefit.Write()
-    
-    
     oFile.cd(fitcf['fitname'])
     modelFitters[-1].Fit()
     cFit = TCanvas('cFit', '', 600, 600)
@@ -185,24 +168,17 @@ for nFit, fitcf in enumerate(cfg['fitcfs']):
         modelFitters[-1].Draw(cFit, fitcf['drawsumcomps'])
     else:
         modelFitters[-1].Draw(cFit)
-    print('CIAOOO1')
+        
     modelFitters[-1].DrawLegend(cFit, fitcf['legcoords'][0], fitcf['legcoords'][1], fitcf['legcoords'][2], 
                              fitcf['legcoords'][3], fitcf['legentries'])
-    print('CIAOOO2')
     cFit.Write()
-    print('CIAOOO3')
     fitHisto.Write()
-    print('CIAOOO4')
     fitFunction = modelFitters[-1].GetFitFunction()
-    print('CIAOOO5')
     fitFunction.Write()
-    print('CIAOOO6')
-    print(compsToFile)
     for compToFile in compsToFile:
-        print('CIAO ' + str(compToFile))
-        fitComp = modelFitters[-1].GetComponent(compToFile)
-        fitComp.Write()
-    print('CIAOOO7')
+        modelFitters[-1].GetComponent(compToFile).Write(func['funcname'])
+        modelFitters[-1].GetComponentPars(compToFile).Write('h' + func['funcname'][0].upper() + func['funcname'][1:])
+    
     with open(oFileNameCfg, 'a') as file:
         file.write('-----------------------------------')
         file.write('\n')
@@ -215,7 +191,6 @@ for nFit, fitcf in enumerate(cfg['fitcfs']):
     pdfFileName = fitcf['fitname'] + cfg["suffix"] + ".pdf"
     pdfFilePath = os.path.join(cfg['odir'], pdfFileName) 
     cFit.SaveAs(pdfFilePath)
-    print('CIAOOO6')
 
 oFile.Close()
 print(f'Config saved in {oFileNameCfg}')

@@ -9,6 +9,42 @@
 #include "TMath.h"
 #include "gsl/gsl_sf_dawson.h"
 
+double Pol0(double *x, double *par);
+double Pol1(double *x, double *par);
+double Pol2(double *x, double *par);
+double Pol3(double *x, double *par);
+double Pol4(double *x, double *par);
+double Pol5(double *x, double *par);
+double Gaus(double *x, double *par);
+double BreitWigner(double *x, double *par);
+double Voigt(double *x, double *par);
+double ComplexLednicky_Singlet_doublegaussian_lambda(double *x, double *par);
+double BreitWignerKStar(double *x, double *par);
+double Spline3(double *x, double *par);
+double Spline3Range(double *x, double *par);
+double PowerLaw(double *x, double *par);
+double FlatPol3(double *x, double *par);
+double SillKStar(double *x, double *par);
+
+std::map<TString, double (*)(double *x, double *par)> functions = 
+   {{"pol0", Pol0},
+    {"pol1", Pol1},
+    {"pol2", Pol2},
+    {"pol3", Pol3},
+    {"pol4", Pol4},
+    {"pol5", Pol5},
+    {"gaus", Gaus},
+    {"bw", BreitWigner},
+    {"voigt", Voigt},
+    {"ComplexLednicky_Singlet_doublegaussian_lambda", ComplexLednicky_Singlet_doublegaussian_lambda},
+    {"sillkstar", BreitWignerKStar},
+    {"spline3", Spline3},
+    {"spline3range", Spline3Range},
+    {"powerlaw", PowerLaw},
+    {"flatpol3", FlatPol3},
+    {"sillkstar", SillKStar}};
+
+
 double Pol0(double *x, double *par) { return par[0]; }
 
 double Pol1(double *x, double *par) { return Pol0(x, par) + par[1] * x[0]; }

@@ -24,7 +24,6 @@ class ModelFitter {
         this->fRejectMin = rejectMin;
         this->fRejectMax = rejectMax;
         this->fNPars = {0};  // The first parameter has index zero
-        //this->fFuncMap = functions;
     }
 
     void SetBaselineIdx(double basIdx) {
@@ -106,10 +105,7 @@ class ModelFitter {
     */
 
     void Add(TString name, std::vector<std::tuple<std::string, double, double, double>> pars, std::string addmode, bool onbaseline) {
-        //if(this->fFuncMap.find(name)!=this->fFuncMap.end()){
-        //    this->fFitFunc.push_back(this->fFuncMap[name]);
-        //    this->fFitFuncComps.push_back(name);
-        //}
+        
         if(functions.find(name)!=functions.end()){
             this->fFitFunc.push_back(functions[name]);
             this->fFitFuncComps.push_back(name);
@@ -127,18 +123,18 @@ class ModelFitter {
         }
     }
 
-    void AddTF1(TString name, TF1 *func, std::vector<std::tuple<std::string, double, double, double>> pars, std::string addmode, bool onbaseline) {
-        
-        this->fFitTF1s.push_back(func);
-        this->fFitFuncComps.push_back(name);
-        this->fAddModes.push_back(addmode);
-        this->fDrawOnBaseline.push_back(onbaseline);
-        this->fNPars.push_back(pars.size());
-        // Save fit settings
-        for (const auto &par : pars) {
-            this->fFitPars.insert({this->fFitPars.size(), par});
-        }
-    }
+//    void AddTF1(TString name, TF1 *func, std::vector<std::tuple<std::string, double, double, double>> pars, std::string addmode, bool onbaseline) {
+//        
+//        this->fFitTF1s.push_back(func);
+//        this->fFitFuncComps.push_back(name);
+//        this->fAddModes.push_back(addmode);
+//        this->fDrawOnBaseline.push_back(onbaseline);
+//        this->fNPars.push_back(pars.size());
+//        // Save fit settings
+//        for (const auto &par : pars) {
+//            this->fFitPars.insert({this->fFitPars.size(), par});
+//        }
+//    }
 
     void AddSplineHisto(TString name, TH1* splinedhisto, std::vector<std::tuple<std::string, double, double, double>> pars, std::string addmode, bool onbaseline,
                         TString legend="ciaospl") {
@@ -150,7 +146,7 @@ class ModelFitter {
         
         this->fAddModes.push_back(addmode);
         this->fDrawOnBaseline.push_back(onbaseline);
-        cout << "SPLINE NUMBER OF PARAMETERS: " << pars.size() << endl;
+        //cout << "SPLINE NUMBER OF PARAMETERS: " << pars.size() << endl;
         this->fNPars.push_back(pars.size());
         // Save fit settings
         for (const auto &par : pars) {
@@ -166,9 +162,9 @@ class ModelFitter {
             throw std::invalid_argument("Component is a spline, exiting!");
         }
         for(int iFunc=0; iFunc<this->fFitFuncComps.size(); iFunc++) {
-            cout << "iFunc name: " << this->fFitFuncComps[iFunc] << endl;
+            //cout << "iFunc name: " << this->fFitFuncComps[iFunc] << endl;
         }
-        cout << "comp on baseline? " << this->fDrawOnBaseline[icomp] << endl;
+        //cout << "comp on baseline? " << this->fDrawOnBaseline[icomp] << endl;
         if(this->fDrawOnBaseline[icomp]) {
             TF1 *compWithoutNormAndBaseline = new TF1(this->fFitFuncComps[icomp],
                 [&, this, icomp](double *x, double *pars) {
@@ -183,6 +179,29 @@ class ModelFitter {
                    return this->fFitFuncEval[icomp]->Eval(x[0]) / this->fNorms[icomp];  
             }, this->fFitRangeMin, this->fFitRangeMax, 0);
             return compWithoutNorm;
+        }
+    }
+
+    TH1D *GetComponentPars(int icomp) {
+        if(!this->fFit) {
+            throw std::invalid_argument("Fit not performed, component cannot be evaluated!");
+        }
+        if(this->fFitFuncComps[icomp].Contains("spline")) {
+            throw std::invalid_argument("Component is a spline, exiting!");
+        }
+        int startPar = accumulate(fNPars.begin(), std::next(fNPars.begin(), icomp+1), 0);
+        std::vector<double> compPars;
+        TH1D *histoPars = new TH1D("histoPars", "histoPars", this->fNPars[icomp+1], 0, this->fNPars[icomp+1]);
+        
+        for(int iCompPar=0; iCompPar<this->fNPars[icomp+1]; iCompPar++) {
+            histoPars->SetBinContent(iCompPar+1, this->fFit->GetParameter(startPar+iCompPar));
+        }
+        return histoPars;
+    }
+
+    void FixPars(TF1 *func, int startpar) {
+        for(int iPar=0; iPar<func->GetNpar(); iPar++) {
+            this->fFit->FixParameter(startpar + iPar, func->GetParameter(iPar));
         }
     }
 
@@ -459,7 +478,6 @@ class ModelFitter {
     TH1 *fFitHist = nullptr;
     TF1 *fFit = nullptr;
 
-    //std::map<TString, double (*)(double *x, double *par)> fFuncMap; // Map containing the implemented functions
     std::vector<double (*)(double *x, double *par)> fFitFunc;       // List of function describing each term of the CF model
     double fBaselineIdx;                                            // Index of baseline function element
     std::vector<TString> fFitFuncComps;                             // Function names of fit components
@@ -476,7 +494,6 @@ class ModelFitter {
     double fRejectMin;
     double fRejectMax;
     std::map<int, std::tuple<std::string, double, double, double>> fFitPars;    // List of fit parameters
-    std::map<int, std::tuple<std::string, double, double, double>> fFitNorms;   // List of fit parameters
 };
 
 #endif  // FEMPY_MODELFITTER_HXX_

@@ -9,7 +9,7 @@ def Load(container, path):
     '''
     Function to extract an object inside a root file.
     Supports nested containers with the following Data Types:
-     - TDirecotryFile (TFile)
+     - TDirectoryFile (TFile)
      - TList
 
     Parameters

@@ -1,85 +1,50 @@
-odir: ~/output/folder
-suffix: rootfilesuffix
+odir: /output/directory
+ofilebasename: pippo                                # ofilebasename_suffix.root
+suffix: pluto
 
-cfinfile: /path/to/cf/data.root
-mcinfile: /path/to/cf/mc.root
+infile: /path/to/file/containing/histo/to/be/fitted
 
 fitcfs:
--   cfpath: cf/path/in/file
-    fitname: folder/name/of/the/fit/in/output
-    fitrange: [0, 400]
-    legcoords: [0.6, 0.65, 0.8, 0.85]
-    legentries: ["#Lambda#pi^{#scale[1.3]{+}}#oplus #bar{#Lambda}#pi^{#scale[1.5]{-}}", "Total", "Genuine", "lambda_flat",
-                 "All simulations", "Mini-Jet"] # legend entries, order matters
-    drawsumcomps: ["2345"] # the components 2,3,4,5 will not be drawn but the sum of them will be
-    model:
-    -   funcname: ComplexLednicky_Singlet_doublegaussian_lambda
-        npars: 7
-        lambdagen: 0.5399
-        addmode: sum # options 'sum' or 'mult', the function is summed/multiplied to the value obtained by
-                     # the previous functions in the model list
-        onbaseline: false # to draw the function on the baseline
-        p0: ['realscatlength', 0, -1, 1]
-        p1: ['imscatlength', 0, 0, -1]
-        p2: ['effrange', 0, 0, -10]
-        p3: ['sourcepar0', 1.4412, 1.4412, 1.4412]
-        p4: ['sourcepar1', 5.0314, 5.0314, 5.0314]
-        p5: ['sourcepar2', 0.808492, 0.808492, 0.808492]
-        p6: ['sourcepar3', 0.944066, 0.944066, 0.944066]
-        prefitfile: null
-    -   funcname: pol0
-        npars: 1
-        norm: ['normLambdaFlat', 1, 1, -1]
+-   cfpath: internal/path/of/histo
+    fitname: MC_LambdaPiPlus                        # folder name for the fit
+    fitrange: [0, 500]          
+    rejectrange: [150, 300]                         # range not considered for the fit
+    legcoords: [0.6, 0.65, 0.8, 0.85]               # [x_low, y_low, x_upp, y_upp]
+    legentries: ["label1", "label2", "label3"]      # legend labels for fit components, the label 
+                                                    # "lambda_flat" will not be displayed
+
+    model:                                      # functions from the file Functions.cxx and Splines of histogram can be added                              
+    -   funcname: name_of_func                  # the corresponding function in Functions.cxx will be considered
+        norm: ['par_name', guess,               # every function is multiplied by a normalization constant, which comes as a
+               low_bound, upp_bound]            # free fit parameter, to fix it put low_bound>upp_bound. In case of the lambda
+                                                # parameters, they are fixed and it is only required the numerical value
+        npars: 4                                # number of parameters for the function (excluding the normalization)
+        p0: ['p0pol4', 0, -8, 8]                # the i-th parameter corresponds to the enter pi 
+        p1: ['p1pol4', 0, -8, 8]
+        p2: ['p2pol4', 0, -8, 8]
+        p3: ['p3pol4', 0, -8, 8]
+        addmode: sum                            # or mult, determines if the function multiplies or sums to the result given by
+                                                # the combination of the previous components
+        isbaseline: true                        # flag this component as baseline for drawing purposes
+        onbaseline: false                       # option to draw this component adding the baseline or not 
+        savetofile: true                        # save this function to file
+    -   funcname: name_of_spline      
+        histofile: /file/of/histo/to/be/splined.root
+        histopath: /internal/path/of/histo/to/be/splined
+        rebin: 2                                # rebin the histo
+        norm: ['norm', guess,                   # splines are added with normalization and shift fit parameters                   
+               low_bound, upp_bound]
+        p0: ['shift', guess, low_bound, upp_bound]
         addmode: sum
+        onbaseline: true
+    -   funcname: flatpol3                      # specific parameters of the model components can be initialized
+        npars: 5                                # by values stored in TH1D contained in root files
+        addmode: mult
+        isbaseline: true
         onbaseline: false
-        p0: ['lambda_flat', 0.4601, 1, -1]
-        prefitfile: null
-    -   funcname: splinehisto_Lambda1520
-        histofile: /home/mdicostanzo/an/LPi/DPG/SimLambda1520_KinemXi1530_42.root
-        histopath: 3122211_-3122-211_smeared
-        rebin: 2
-        norm: ['splinenorm1520', 1.4160230651609765e-07, 0.00000001, 0.001]
-        addmode: sum
-        onbaseline: true
-    -   funcname: splinehisto_Xi1530
-        histofile: /home/mdicostanzo/an/LPi/Simulation/outputs/NewSimStandalonePythia_MERGED.root
-        histopath: _2113122_SMEARED/hSE_2113122_3324_SMEARED
-        rebin: 2
-        norm: ['splinenorm1530', 3.481774312438489e-06, 0.00000001, 0.001]
-        addmode: sum
-        onbaseline: true
-    -   funcname: splinehisto_Sigma1385_dir
-        histofile: /home/mdicostanzo/an/LPi/Simulation/outputs/NewSimStandalonePythia_MERGED.root
-        histopath: _2113122_SMEARED/hSE_2113122_3224_DIRECT_SIGMA_SMEARED
-        rebin: 2
-        norm: ['splinenormSigmaDirect', 1.2078686887892895e-06, 0.00000001, 0.002]
-        addmode: sum
-        onbaseline: true
-    -   funcname: splinehisto_Sigma1385_indir
-        histofile: /home/mdicostanzo/an/LPi/Simulation/outputs/SimSigma1385BkgNew.root
-        histopath: hSEPiPlusLambda
-        rebin: 4
-        norm: ['splinenormSigmaIndirect', 3.9905185257502284e-06, 0.00000001, 0.002]
-        addmode: sum
-        onbaseline: true
-    -   funcname: flatpol3
-        npars: 5
-        norm: ['bkgnorm', 0.98, 0, 2]
-        addmode: mult 
-        isbaseline: true # identification of the baseline component of the model
-        onbaseline: false
-        p0: ['p0polMC', 0, -10, 10]
-        p1: ['p1polMC', 0, -10, 10]
-        p2: ['p2polMC', 0, -10, 10]
-        p3: ['p3polMC', 0, -10, 10]
-        p4: ['gamma', 0.5, 0, 1]
-        prefitcomp: true
-        compfuncname: pol3
-        startnewpar: 15
-        nparscomp: 4
-        prefitfile: /home/mdicostanzo/an/LPi/Trains/02_allpc/mc/histos/RawCF_Norm700_800.root
-        prefitpath: p02_13/sgn/hCFrew
-        prefitrange: [80, 400]
-        rejectrange: [150, 300]
-        fixprefit: true
-        prefitmodel: []
+        fixparsfromfuncts: [[0,2], [1,3], [2,4], [3,5]]     # [[par_of_model_component, histo_bin_content]]
+        norm: ['norm_par_name', 0.98, 0, 2]
+        p4: ['par_name', 0.5, 0, 1]                         # parameters that are not fixed are given wit the same 
+                                                            # syntax as before
+        histofuncfile: /path/to/file/containing/histo/with/parameters/values.root
+        histofuncpath: internal/path

@@ -90,7 +90,7 @@ for nFit, fitcf in enumerate(cfg['fitcfs']):
     compsToFile = []
     # for loop over the functions entering in the model
     for funcIdx, func in enumerate(fitcf['model']):
-        print(func['funcname'])
+        
         if('isbaseline' in func):
             if(func['isbaseline']):
                 modelFitters[-1].SetBaselineIdx(funcIdx)
@@ -127,23 +127,23 @@ for nFit, fitcf in enumerate(cfg['fitcfs']):
         #    cFixedTF1.Write()
         
         else:  
-            if('spline3' in func['funcname']):
-                for nKnot, xKnot in enumerate(func['xknots']):
-                    initPars.append([f'xKnot{nKnot}', xKnot, xKnot, xKnot])
-                for nKnot, xKnot in enumerate(func['xknots']):
-                    nBin = prefitHisto.FindBin(xKnot)
-                    yKnot = prefitHisto.GetBinContent(nBin)
-                    initPars.append([f'yKnot{nKnot}', yKnot, yKnot - (yKnot/100)*30, yKnot + (yKnot/100)*30])
-            else:
-                if('fixparsfromfuncts' in func):
-                    histoFuncFile = TFile(func['histofuncfile'])
-                    histoFuncParams = Load(histoFuncFile, func['histofuncpath'])
-                    for iPar in func['fixparsfromfuncts']:
-                        func[f'p{iPar[0]}'] = [f'p{iPar[0]}_prefit', 
-                                               histoFuncParams.GetBinContent(iPar[1]), 0, -1]
+            #if('spline3' in func['funcname']):
+            #    for nKnot, xKnot in enumerate(func['xknots']):
+            #        initPars.append([f'xKnot{nKnot}', xKnot, xKnot, xKnot])
+            #    for nKnot, xKnot in enumerate(func['xknots']):
+            #        nBin = prefitHisto.FindBin(xKnot)
+            #        yKnot = prefitHisto.GetBinContent(nBin)
+            #        initPars.append([f'yKnot{nKnot}', yKnot, yKnot - (yKnot/100)*30, yKnot + (yKnot/100)*30])
+            #else:
+            if('fixparsfromfuncts' in func):
+                histoFuncFile = TFile(func['histofuncfile'])
+                histoFuncParams = Load(histoFuncFile, func['histofuncpath'])
+                for iPar in func['fixparsfromfuncts']:
+                    func[f'p{iPar[0]}'] = [f'p{iPar[0]}_prefit', 
+                                           histoFuncParams.GetBinContent(iPar[1]), 0, -1]
 
-                initPars = [(func[f'p{iPar}'][0], func[f'p{iPar}'][1], func[f'p{iPar}'][2], 
-                             func[f'p{iPar}'][3]) for iPar in range(func['npars'])]
+            initPars = [(func[f'p{iPar}'][0], func[f'p{iPar}'][1], func[f'p{iPar}'][2], 
+                         func[f'p{iPar}'][3]) for iPar in range(func['npars'])]
 
             if('lambdapar' in func):
                 lambdaParam = [("lambdapar_" + func['funcname'], func['lambdapar'], 0, -1)]
@@ -176,8 +176,10 @@ for nFit, fitcf in enumerate(cfg['fitcfs']):
     fitFunction = modelFitters[-1].GetFitFunction()
     fitFunction.Write()
     for compToFile in compsToFile:
-        modelFitters[-1].GetComponent(compToFile).Write(func['funcname'])
-        modelFitters[-1].GetComponentPars(compToFile).Write('h' + func['funcname'][0].upper() + func['funcname'][1:])
+        if('spline' not in fitcf['model'][funcIdx]['funcname']):
+            modelFitters[-1].GetComponent(compToFile).Write(func['funcname'])
+        modelFitters[-1].GetComponentPars(compToFile).Write('h' + fitcf['model'][compToFile]['funcname'][0].upper() + 
+                                                            fitcf['model'][compToFile]['funcname'][1:])
     
     with open(oFileNameCfg, 'a') as file:
         file.write('-----------------------------------')

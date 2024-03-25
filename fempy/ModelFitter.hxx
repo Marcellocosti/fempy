@@ -158,9 +158,6 @@ class ModelFitter {
         if(!this->fFit) {
             throw std::invalid_argument("Fit not performed, component cannot be evaluated!");
         }
-        if(this->fFitFuncComps[icomp].Contains("spline")) {
-            throw std::invalid_argument("Component is a spline, exiting!");
-        }
         for(int iFunc=0; iFunc<this->fFitFuncComps.size(); iFunc++) {
             //cout << "iFunc name: " << this->fFitFuncComps[iFunc] << endl;
         }
@@ -186,12 +183,10 @@ class ModelFitter {
         if(!this->fFit) {
             throw std::invalid_argument("Fit not performed, component cannot be evaluated!");
         }
-        if(this->fFitFuncComps[icomp].Contains("spline")) {
-            throw std::invalid_argument("Component is a spline, exiting!");
-        }
         int startPar = accumulate(fNPars.begin(), std::next(fNPars.begin(), icomp+1), 0);
         std::vector<double> compPars;
-        TH1D *histoPars = new TH1D("histoPars", "histoPars", this->fNPars[icomp+1], 0, this->fNPars[icomp+1]);
+        TH1D *histoPars = new TH1D("histoPars_" + this->fFitFuncComps[icomp], "histoPars_" + this->fFitFuncComps[icomp], 
+                                    this->fNPars[icomp+1], 0, this->fNPars[icomp+1]);
         
         for(int iCompPar=0; iCompPar<this->fNPars[icomp+1]; iCompPar++) {
             histoPars->SetBinContent(iCompPar+1, this->fFit->GetParameter(startPar+iCompPar));

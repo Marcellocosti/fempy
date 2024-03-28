@@ -185,7 +185,7 @@ class ModelFitter {
                 int nFuncComp = 0;
                 for (int iTerm = 0; iTerm < nTerms; iTerm++) {
                     if(fFitFuncComps[iTerm].Contains("splinehisto")) {
-                        if(fAddModes[iTerm] == "mult") {
+                        if(fAddModes[iTerm] == "*") {
                             double partResult = result; 
                             if(this->fNPars[iTerm+1] == 2){
                                 result = pars[nPar]*this->fFitSplines[nSplineComp]->Eval(x[0] - pars[nPar+1])*partResult;
@@ -203,7 +203,7 @@ class ModelFitter {
                         nSplineComp++;
                     } else {
                         auto func = this->fFitFunc[nFuncComp];
-                        if(fAddModes[iTerm] == "mult") {
+                        if(fAddModes[iTerm] == "*") {
                             double partResult = result; 
                             result = pars[nPar]*func(x, &pars[nPar+1])*partResult;
                         } else {
@@ -254,14 +254,14 @@ class ModelFitter {
     /*
     Define a canvas before calling this function and pass gPad as TVirtualPad
     */
-    void Draw(TVirtualPad *pad, std::vector<TString> addComps = {""}, double lowRangeUser=0.0, double uppRangeUserMult=1.05, 
+    void Draw(TVirtualPad *pad, std::vector<TString> addComps = {""}, double lowRangeUser=0.0, double uppRangeUser=1.05, 
               std::string title=";k* (MeV/c);C(k*)") {
 
         EvaluateComponents(addComps); 
     
         pad->cd();
         double yMinDraw = lowRangeUser;
-        double yMaxDraw = uppRangeUserMult * fFitHist->GetMaximum();
+        double yMaxDraw = uppRangeUser + fFitHist->GetMaximum();
         
         //gPad->DrawFrame(fFitRangeMin, yMinDraw, fFitRangeMax, yMaxDraw, title.data());
         gPad->DrawFrame(fFitRangeMin, yMinDraw, 2000, yMaxDraw, title.data());

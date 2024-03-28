@@ -146,7 +146,6 @@ class ModelFitter {
         
         this->fAddModes.push_back(addmode);
         this->fDrawOnBaseline.push_back(onbaseline);
-        //cout << "SPLINE NUMBER OF PARAMETERS: " << pars.size() << endl;
         this->fNPars.push_back(pars.size());
         // Save fit settings
         for (const auto &par : pars) {
@@ -158,10 +157,7 @@ class ModelFitter {
         if(!this->fFit) {
             throw std::invalid_argument("Fit not performed, component cannot be evaluated!");
         }
-        for(int iFunc=0; iFunc<this->fFitFuncComps.size(); iFunc++) {
-            //cout << "iFunc name: " << this->fFitFuncComps[iFunc] << endl;
-        }
-        //cout << "comp on baseline? " << this->fDrawOnBaseline[icomp] << endl;
+        
         if(this->fDrawOnBaseline[icomp]) {
             TF1 *compWithoutNormAndBaseline = new TF1(this->fFitFuncComps[icomp],
                 [&, this, icomp](double *x, double *pars) {
@@ -217,7 +213,6 @@ class ModelFitter {
                 int nFuncComp = 0;
                 for (int iTerm = 0; iTerm < nTerms; iTerm++) {
                     if(fFitFuncComps[iTerm].Contains("splinehisto")) {
-                        auto func = this->fFitSplines[nSplineComp];
                         if(fAddModes[iTerm] == "mult") {
                             double partResult = result; 
                             if(this->fNPars[iTerm+1] == 2){
@@ -235,7 +230,6 @@ class ModelFitter {
                         }
                         nSplineComp++;
                     } else if(fFitFuncComps[iTerm].Contains("TF1")) {
-                        auto func = this->fFitTF1s[nTF1Comp];
                         if(fAddModes[iTerm] == "mult") {
                             double partResult = result; 
                             result = pars[nPar]*this->fFitTF1s[nTF1Comp]->Eval(x[0])*partResult;
@@ -260,18 +254,15 @@ class ModelFitter {
             fFitRangeMin, fFitRangeMax, this->fFitPars.size());
 
         int baselinePar = accumulate(fNPars.begin(), std::next(fNPars.begin(), fBaselineIdx), 0);
-        //cout << "Total number of parameters " << this->fFitPars.size() << endl;
-        //cout << "Baseline par " << baselinePar << endl;
+        
         for (size_t iPar = 0; iPar < this->fFitPars.size(); iPar++) {
             auto pars = this->fFitPars[iPar];
             cout << "iPar" << iPar << ": " << std::get<0>(pars) << " " << std::get<1>(pars) << " " << std::get<2>(pars) << " " << std::get<3>(pars) << endl;        
             this->fFit->SetParName(iPar, std::get<0>(pars).data());
             if (std::get<2>(pars) >= std::get<3>(pars)) {
-                //cout << "iPar" << iPar << ": " << std::get<1>(pars) << endl;
                 this->fFit->FixParameter(iPar, std::get<1>(pars));
             } else {
                 this->fFit->SetParameter(iPar, std::get<1>(pars));
-                //cout << "iPar" << iPar << ": " << std::get<2>(pars) << " " << std::get<3>(pars) << endl;
                 this->fFit->SetParLimits(iPar, std::get<2>(pars), std::get<3>(pars));
             }
         }
@@ -284,7 +275,6 @@ class ModelFitter {
             double lowParLimit;
             double uppParLimit;
             this->fFit->GetParLimits(iPar, lowParLimit, uppParLimit);
-            //cout << "Setting parameters for prefit component" << endl;
             cout << "iPar" << iPar << ": " << this->fFit->GetParName(iPar) << " " << this->fFit->GetParameter(iPar) 
                  << " " << lowParLimit << " " << uppParLimit << endl;
         }

@@ -3,7 +3,7 @@ Script to perform the fit on a correlation function.
 The output file is FitCF_suffix.root
 
 Usage:
-python3 fitCF.py cfg.yml
+python3 ModelFitter.py cfg.yml
 
 '''
 
@@ -68,7 +68,7 @@ with open(oFileNameCfg, 'w') as file:
 modelFitters = []
 
 # for loop over the correlation functions
-for nFit, fitcf in enumerate(cfg['fitcfs']):
+for fitcf in cfg['fitcfs']:
     
     # change unity of measure of histograms from GeV to MeV
     fitHisto = ChangeUnits(Load(inFileFit, fitcf['cfpath']), 1000)
@@ -89,13 +89,13 @@ for nFit, fitcf in enumerate(cfg['fitcfs']):
 
     compsToFile = []
     # for loop over the functions entering in the model
-    for funcIdx, func in enumerate(fitcf['model']):
+    for iFunc, func in enumerate(fitcf['model']):
         
         if('isbaseline' in func):
             if(func['isbaseline']):
-                modelFitters[-1].SetBaselineIdx(funcIdx)
+                modelFitters[-1].SetBaselineIdx(iFunc)
         if('savetofile' in func):
-            compsToFile.append(funcIdx)
+            compsToFile.append(iFunc)
         
         # fit function parameters initialization
         initPars = []
@@ -176,7 +176,7 @@ for nFit, fitcf in enumerate(cfg['fitcfs']):
     fitFunction = modelFitters[-1].GetFitFunction()
     fitFunction.Write()
     for compToFile in compsToFile:
-        if('spline' not in fitcf['model'][funcIdx]['funcname']):
+        if('spline' not in fitcf['model'][iFunc]['funcname']):
             modelFitters[-1].GetComponent(compToFile).Write(func['funcname'])
         modelFitters[-1].GetComponentPars(compToFile).Write('h' + fitcf['model'][compToFile]['funcname'][0].upper() + 
                                                             fitcf['model'][compToFile]['funcname'][1:])

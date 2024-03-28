@@ -118,7 +118,6 @@ double BreitWigner(double *x, double *par) {
 }
 
 double BreitWignerKStar(double *x, double *par) {
-
   // p0: normalisation
   // p1: mass
   // p2: width
@@ -195,11 +194,7 @@ double Spline3Range(double *x, double *par){
         yKnots[iKnot] = par[numKnots+iKnot];
     }
     TSpline3* sp3 = new TSpline3("sp3", xKnots, yKnots, numKnots, "");
-    
-    //if(x[0]<95 || x[0]>) return 0;
-    //else {
-    //    return sp3->Eval(x[0]);
-    //}
+
     return sp3->Eval(x[0]);
 }
 
@@ -242,48 +237,6 @@ double SillKStar(double *x, double *par) {
   double jacobian = kstar / sqrt(kstar * kstar + massPion * massPion) + kstar / sqrt(kstar * kstar + massLambda * massLambda);
   return (par[0] * arg0 * arg1 / (arg2 + arg3)) * abs(jacobian);
 }
-
-
-//double Sill_WithPS(double *x, double *par) {
-//
-//  // x[0]: k*
-//  // par: [0] "normalisation" constant
-//  //      [1] width
-//  //      [2] mass
-//  //      [3] resonance pT
-//  //      [4] kinetic decoupling temperature
-//
-//  double LambdaFactor = 290;
-//
-//  if (x[0] < 0)
-//    return 0;
-//
-//  // double t = x[0];
-//
-//  double kstar = x[0];
-//  double Thresh = MassPion + MassProton;
-//
-//  double MotherMass = sqrt(kstar * kstar + MassPion * MassPion) + sqrt(kstar * kstar + MassProton * MassProton);
-//
-//  if (MotherMass < Thresh)
-//    return 0;
-//
-//  double width = par[1] * par[2] / sqrt(par[2] * par[2] - Thresh * Thresh);
-//  double arg0 = 2 * MotherMass / TMath::Pi();
-//  double arg1 = sqrt(MotherMass * MotherMass - Thresh * Thresh) * width;
-//  double arg2 = pow(MotherMass * MotherMass - par[2] * par[2], 2.);
-//  double arg3 = pow(sqrt(MotherMass * MotherMass - Thresh * Thresh) * width, 2.);
-//
-//  double ResonancePt = par[3];
-//  double Temperature = par[4]; // orignal paper 160
-//  double PhaseSpace = (MotherMass / sqrt(MotherMass * MotherMass + ResonancePt * ResonancePt)) * exp(-sqrt(MotherMass * MotherMass + ResonancePt * ResonancePt) / Temperature);
-//  double PhaseSpaceNorm = exp(-sqrt(Thresh * Thresh + ResonancePt * ResonancePt) / Temperature) * Temperature;
-//
-//  // return (par[0]*arg0*arg1/(arg2 + arg3))*PhaseSpace/(PhaseSpaceNorm*ME_Value); // *abs(Derivative_dM_dkStar(kstar));
-//
-//  return (par[0] * arg0 * arg1 / (arg2 + arg3)) * PhaseSpace / (PhaseSpaceNorm)*abs(Derivative_dM_dkStar(kstar));
-//
-//}
 
 const double FmToNu(5.067731237e-3);
 const double Pi(3.141592653589793);

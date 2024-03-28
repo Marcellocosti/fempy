@@ -3,7 +3,7 @@ Script to perform the fit on a correlation function.
 The output file is FitCF_suffix.root
 
 Usage:
-python3 fitCF.py cfg.yml
+python3 FitCF.py cfg.yml
 
 '''
 

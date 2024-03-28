@@ -139,9 +139,6 @@ for fitcf in cfg['fitcfs']:
 
             print(initPars)
             modelFitters[-1].Add(term['func'], initPars, term['addmode'], term['onbaseline'])
-        
-        else:
-            pass
                 
     # perform the fit and save the result
     oFile.cd(fitcf['fitname'])

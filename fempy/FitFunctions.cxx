@@ -28,25 +28,25 @@ double FlatPol3PowLaw(double *x, double *par);
 double Pol3PowLaw(double *x, double *par);
 double SillKStar(double *x, double *par);
 
-std::map<TString, double (*)(double *x, double *par)> functions = 
-   {{"pol0", Pol0},
-    {"pol1", Pol1},
-    {"pol2", Pol2},
-    {"pol3", Pol3},
-    {"pol4", Pol4},
-    {"pol5", Pol5},
-    {"gaus", Gaus},
-    {"bw", BreitWigner},
-    {"voigt", Voigt},
-    {"ComplexLednicky_Singlet_doublegaussian_lambda", ComplexLednicky_Singlet_doublegaussian_lambda},
-    {"sillkstar", BreitWignerKStar},
-    {"spline3", Spline3},
-    {"spline3range", Spline3Range},
-    {"powerlaw", PowerLaw},
-    {"flatpol3", FlatPol3},
-    {"flatpol3powlaw", FlatPol3PowLaw},
-    {"pol3powlaw", Pol3PowLaw},
-    {"sillkstar", SillKStar}};
+std::map<TString, std::tuple<double (*)(double *x, double *par), int>> functions = 
+   {{"pol0", {Pol0, 1}},
+    {"pol1", {Pol1, 2}},
+    {"pol2", {Pol2, 3}},
+    {"pol3", {Pol3, 4}},
+    {"pol4", {Pol4, 5}},
+    {"pol5", {Pol5, 6}},
+    {"gaus", {Gaus, 3}},
+    {"bw", {BreitWigner, 3}},
+    {"voigt", {Voigt, 4}},
+    {"ComplexLednicky_Singlet_doublegaussian_lambda", {ComplexLednicky_Singlet_doublegaussian_lambda, 7}},
+    {"sillkstar", {BreitWignerKStar, 3}},
+    {"spline3", {Spline3, 20}},
+    {"spline3range", {Spline3Range, 20}},
+    {"powerlaw", {PowerLaw, 7}},
+    {"flatpol3", {FlatPol3, 5}},
+    {"flatpol3powlaw", {FlatPol3PowLaw, 6}},
+    {"pol3powlaw", {Pol3PowLaw, 5}},
+    {"sillkstar", {SillKStar, 3}}};
 
 
 double Pol0(double *x, double *par) { return par[0]; }

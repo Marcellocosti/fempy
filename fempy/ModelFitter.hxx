@@ -68,21 +68,6 @@ class ModelFitter {
         pad->Update();
     }
 
-    void DrawTF1Comp(TVirtualPad *pad, TF1* func, 
-                     std::string name=";k* (MeV/c);Counts") {
-        pad->cd();
-        
-        double yMaxDraw = func->GetMaximum()*1.2;
-        
-        gPad->DrawFrame(fFitRangeMin, 0, fFitRangeMax, yMaxDraw, name.data());
-
-        func->SetNpx(300);
-        func->SetLineColor(kRed);
-        func->Draw();
-        func->SetLineWidth(2);
-        pad->Update();
-    }
-
     /*
     Add a term to the CF model. Available options:
         - pol0
@@ -106,6 +91,7 @@ class ModelFitter {
 
     void Add(TString name, std::vector<std::tuple<std::string, double, double, double>> pars, std::string addmode, bool onbaseline) {
         
+        cout << "Adding " << name << endl;
         if(functions.find(name)!=functions.end()){
             this->fFitFunc.push_back(functions[name]);
             this->fFitFuncComps.push_back(name);
@@ -122,19 +108,6 @@ class ModelFitter {
             this->fFitPars.insert({this->fFitPars.size(), par});
         }
     }
-
-//    void AddTF1(TString name, TF1 *func, std::vector<std::tuple<std::string, double, double, double>> pars, std::string addmode, bool onbaseline) {
-//        
-//        this->fFitTF1s.push_back(func);
-//        this->fFitFuncComps.push_back(name);
-//        this->fAddModes.push_back(addmode);
-//        this->fDrawOnBaseline.push_back(onbaseline);
-//        this->fNPars.push_back(pars.size());
-//        // Save fit settings
-//        for (const auto &par : pars) {
-//            this->fFitPars.insert({this->fFitPars.size(), par});
-//        }
-//    }
 
     void AddSplineHisto(TString name, TH1* splinedhisto, std::vector<std::tuple<std::string, double, double, double>> pars, std::string addmode, bool onbaseline,
                         TString legend="ciaospl") {
@@ -190,12 +163,6 @@ class ModelFitter {
         return histoPars;
     }
 
-    void FixPars(TF1 *func, int startpar) {
-        for(int iPar=0; iPar<func->GetNpar(); iPar++) {
-            this->fFit->FixParameter(startpar + iPar, func->GetParameter(iPar));
-        }
-    }
-
     void BuildFitFunction() {
         cout << "----------- Building the fit function -----------" << endl;
         // Build the fit function
@@ -206,10 +173,9 @@ class ModelFitter {
                     TF1::RejectPoint();
                 } 
                 double result = 0;
-                int nTerms = this->fFitFunc.size() + this->fFitSplines.size() + this->fFitTF1s.size();
+                int nTerms = this->fFitFunc.size() + this->fFitSplines.size();
                 int nPar = 0;
                 int nSplineComp = 0;
-                int nTF1Comp = 0;
                 int nFuncComp = 0;
                 for (int iTerm = 0; iTerm < nTerms; iTerm++) {
                     if(fFitFuncComps[iTerm].Contains("splinehisto")) {
@@ -229,15 +195,6 @@ class ModelFitter {
                             }
                         }
                         nSplineComp++;
-                    } else if(fFitFuncComps[iTerm].Contains("TF1")) {
-                        if(fAddModes[iTerm] == "mult") {
-                            double partResult = result; 
-                            result = pars[nPar]*this->fFitTF1s[nTF1Comp]->Eval(x[0])*partResult;
-                        }
-                        else {
-                            result += pars[nPar]*this->fFitTF1s[nTF1Comp]->Eval(x[0]);
-                        }
-                        nTF1Comp++;
                     } else {
                         auto func = this->fFitFunc[nFuncComp];
                         if(fAddModes[iTerm] == "mult") {
@@ -295,7 +252,7 @@ class ModelFitter {
               std::string title=";k* (MeV/c);C(k*)") {
 
         EvaluateComponents(addComps); 
-
+    
         pad->cd();
         double yMinDraw = lowRangeUser;
         double yMaxDraw = uppRangeUserMult * fFitHist->GetMaximum();
@@ -310,7 +267,6 @@ class ModelFitter {
         
         std::vector<Color_t> colors = {kBlue, kAzure + 2, kGreen, kBlue + 2, kOrange, kCyan, kBlack, kMagenta, kYellow};
         for(int iFuncEval=0; iFuncEval<fFitFuncEval.size(); iFuncEval++) {
-            cout << "iFuncEval " << iFuncEval << " fFitFuncEval size: " << fFitFuncEval.size() << endl;
             this->fFitFuncEval[iFuncEval]->SetNpx(300);
             this->fFitFuncEval[iFuncEval]->SetLineColor(colors[iFuncEval]);
             this->fFitFuncEval[iFuncEval]->SetLineWidth(3);
@@ -333,11 +289,10 @@ class ModelFitter {
         cout << endl;
         cout << endl;
         cout << "########## Debugging fit components ##########" << endl;
-        cout << "Total TF1 terms: " << this->fFitTF1s.size() << endl;
         cout << "Total spline terms: " << this->fFitSplines.size() << endl;
         cout << "Total func terms: " << this->fFitFunc.size() << endl;
         cout << "--------------------------" << endl;    
-        int nTerms = this->fFitFunc.size() + this->fFitSplines.size() + this->fFitTF1s.size();
+        int nTerms = this->fFitFunc.size() + this->fFitSplines.size();
         for(int iTerm=0; iTerm<nTerms; iTerm++) {
             if(iTerm==fBaselineIdx) cout << "BASELINE" << endl;
             cout << "Term name: " << this->fFitFuncComps[iTerm] << endl;
@@ -366,15 +321,15 @@ class ModelFitter {
         }
 
         std::vector<TF1*> components;
-        int nTerms = this->fFitFunc.size() + this->fFitSplines.size() + this->fFitTF1s.size();
+        int nTerms = this->fFitFunc.size() + this->fFitSplines.size();
         int setPars = 0;
         int iSpline = 0;
-        int iTF1 = 0;
         int iFunc = 0;
         cout << "Fit Function terms: " << nTerms << endl;
         cout << "Fit Function number of parameters: " << this->fFit->GetNpar() << endl;
         for(int iTerm=0; iTerm<nTerms; iTerm++) {
             std::string compName = static_cast<std::string>(this->fFitFuncComps[iTerm]);
+            cout << "Name of the component: " << compName << endl;
             if(this->fFitFuncComps[iTerm].Contains("spline")) {
                 cout << "Set par " << this->fFit->GetParameter(setPars) << endl;
                 cout << "Set par +1 " << this->fFit->GetParameter(setPars+1) << endl;
@@ -388,27 +343,19 @@ class ModelFitter {
                             }
                         }, fFitRangeMin, fFitRangeMax, 0));
                 iSpline++;
-            } else if(this->fFitFuncComps[iTerm].Contains("TF1")) {
-                cout << "TF1 norm " << this->fFit->GetParameter(setPars) << endl;
-                cout << endl;
-                components.push_back(new TF1(Form("iComp_%.0f", iTerm),
-                        [&, this, iTF1](double *x, double *pars) {
-                            return fFitTF1s[iTF1]->Eval(x[0]);
-                        }, fFitRangeMin, fFitRangeMax, 0));
-                iTF1++;
             } else {
                 cout << "Evaluating function " << iFunc << " nPars: " << fNPars[iTerm+1] << endl;
                 components.push_back(new TF1(Form("iComp_%.0f", iTerm), fFitFunc[iFunc], fFitRangeMin, fFitRangeMax, fNPars[iTerm+1]));
                 iFunc++;                
                 for(int iPar=1; iPar<fNPars[iTerm+1]; iPar++) {
-                    cout << "Setting iPar " << iPar << endl;
-                    cout << "Value " << this->fFit->GetParameter(setPars + iPar) << endl;
+                    cout << "Setting iPar " << iPar << ": " << this->fFit->GetParameter(setPars + iPar) << endl;
                     components.back()->FixParameter(iPar-1, this->fFit->GetParameter(setPars + iPar));
                 }
+                cout << endl;
             }
             setPars += fNPars[iTerm+1];
         }
-        cout << "Evaluated" << endl;
+
         for(int iFunc=0; iFunc<nTerms; iFunc++) {
             bool toBeSummed = false;
             for(int iAddComp=0; iAddComp<addComps.size(); iAddComp++) {
@@ -433,7 +380,6 @@ class ModelFitter {
                     fFitRangeMin, fFitRangeMax, 0));            
             }
         }        
-        cout << "Evaluated2" << endl;
             
         if(addComps[0] != "") {
             for(int iAddComp=0; iAddComp<addComps.size(); iAddComp++) {
@@ -464,7 +410,6 @@ class ModelFitter {
     std::vector<TString> fFitFuncComps;                             // Function names of fit components
     std::vector<bool> fDrawOnBaseline;                              // Options to draw fit components on the baseline function
     std::vector<TSpline3 *> fFitSplines;                            // Spline fit components
-    std::vector<TF1 *> fFitTF1s;                                    // TF1 fit components
     std::vector<TF1*> fFitFuncEval;                                 // Fit components evaluated after the fitting
     std::vector<int> fNPars;                                        // Keeps track of how many parameters each function has
     std::vector<std::string> fAddModes;                             // Select mode of adding the contributions to the model

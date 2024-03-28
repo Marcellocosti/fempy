@@ -1,6 +1,6 @@
 '''
 Script to perform the fit on a correlation function.
-The output file is FitCF_suffix.root
+The output file is CustomNameFromYaml_suffix.root
 
 Usage:
 python3 ModelFitter.py cfg.yml
@@ -17,7 +17,7 @@ from ROOT import ModelFitter
 
 from fempy import logger as log
 from fempy.utils.io import Load
-from utils.analysis import ChangeUnits
+from fempy.utils.analysis import ChangeUnits
 
 parser = argparse.ArgumentParser()
 parser.add_argument('cfg', default='')

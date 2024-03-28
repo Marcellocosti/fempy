@@ -87,7 +87,13 @@ for fitcf in cfg['fitcfs']:
     oFile.mkdir(fitcf['fitname'])
     oFile.cd(fitcf['fitname'])
 
+    linesThickness = fitcf['linethick']
     compsToFile = []
+    onBaseline = []
+    colors = []
+    legLabels = []
+    legLabels.append(fitcf['datalabel'])
+    legLabels.append(fitcf['fitfunclabel'])
     # for loop over the functions entering in the model
     for iTerm, term in enumerate(fitcf['model']):
         
@@ -97,9 +103,10 @@ for fitcf in cfg['fitcfs']:
         if('savetofile' in term):
             compsToFile.append(iTerm)
         
-        # fit function parameters initialization
-        #initPars = []
-    
+        legLabels.append(term['legentry'])
+        colors.append(term['linecolor'])
+        onBaseline.append(term['onbaseline'])
+
         if('template' in term):
             print(term['template'])
             histoFile = TFile(term['histofile'])
@@ -146,13 +153,16 @@ for fitcf in cfg['fitcfs']:
     oFile.cd(fitcf['fitname'])
     modelFitters[-1].Fit()
     cFit = TCanvas('cFit', '', 600, 600)
+    print(colors)
     if('drawsumcomps' in fitcf):
-        modelFitters[-1].Draw(cFit, fitcf['drawsumcomps'])
+        modelFitters[-1].Draw(cFit, legLabels, fitcf['legcoords'], onBaseline,
+                              linesThickness, fitcf['drawsumcomps'])
     else:
-        modelFitters[-1].Draw(cFit)
+        modelFitters[-1].Draw(cFit, legLabels, fitcf['legcoords'], onBaseline,
+                              linesThickness)
         
-    modelFitters[-1].DrawLegend(cFit, fitcf['legcoords'][0], fitcf['legcoords'][1], fitcf['legcoords'][2], 
-                             fitcf['legcoords'][3], fitcf['legentries'])
+    #modelFitters[-1].DrawLegend(cFit, fitcf['legcoords'][0], fitcf['legcoords'][1], fitcf['legcoords'][2], 
+    #                         fitcf['legcoords'][3], fitcf['legentries'])
     cFit.Write()
     fitHisto.Write()
     fitFunction = modelFitters[-1].GetFitFunction()

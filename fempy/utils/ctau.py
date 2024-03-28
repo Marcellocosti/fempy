@@ -13,7 +13,7 @@ mean_lives = { # s
 }
 
 widths = { # MeV
-    413: 0.0834
+    413: 0.0834,
 }
 
 print(get_ctau_time(mean_lives[411]))

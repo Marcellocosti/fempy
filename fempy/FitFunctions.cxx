@@ -153,65 +153,65 @@ double Exp(double *x, double *par) {
     return par[0] * TMath::Exp(par[1] * x[0]);
 }
 
-//double PowEx(double *x, double *par) {
-//    // p0: total yield
-//    // p1: slope
-//    double mpi = TDatabasePDG::Instance()->GetParticle(211)->Mass();
-//
-//    if (x[0] < mpi) return 0;
-//    return par[0] * TMath::Sqrt(x[0] - mpi) * TMath::Exp(-1. * par[1] * (x[0] - mpi));
-//}
+double PowEx(double *x, double *par) {
+    // p0: total yield
+    // p1: slope
+    double mpi = TDatabasePDG::Instance()->GetParticle(211)->Mass();
 
-//double Spline3(double *x, double *par){
-//    int numKnots = 10;
-//    double xKnots[numKnots];
-//    double yKnots[numKnots];
-//    for(int iKnot=0; iKnot<numKnots; iKnot++){
-//        xKnots[iKnot] = par[iKnot];
-//        yKnots[iKnot] = par[numKnots+iKnot];
-//    }
-//    TSpline3* sp3 = new TSpline3("sp3", xKnots, yKnots, numKnots, "");
-//    return sp3->Eval(x[0]);
-//}
+    if (x[0] < mpi) return 0;
+    return par[0] * TMath::Sqrt(x[0] - mpi) * TMath::Exp(-1. * par[1] * (x[0] - mpi));
+}
 
-//double Spline5(double *x, double *par){
-//    int numKnots = 6;
-//    double xKnots[numKnots];
-//    double yKnots[numKnots];
-//    for(int iKnot=0; iKnot<numKnots; iKnot++){
-//        xKnots[iKnot] = par[iKnot];
-//        yKnots[iKnot] = par[numKnots+iKnot];
-//    }
-//    TSpline5* sp5 = new TSpline5("sp5", xKnots, yKnots, numKnots, "");
-//    return sp5->Eval(x[0]);
-//}
+double Spline3(double *x, double *par){
+    int numKnots = 10;
+    double xKnots[numKnots];
+    double yKnots[numKnots];
+    for(int iKnot=0; iKnot<numKnots; iKnot++){
+        xKnots[iKnot] = par[iKnot];
+        yKnots[iKnot] = par[numKnots+iKnot];
+    }
+    TSpline3* sp3 = new TSpline3("sp3", xKnots, yKnots, numKnots, "");
+    return sp3->Eval(x[0]);
+}
 
-//double Spline3Range(double *x, double *par){
-//    int numKnots = 10;
-//    double xKnots[numKnots];
-//    double yKnots[numKnots];
-//    for(int iKnot=0; iKnot<numKnots; iKnot++){
-//        xKnots[iKnot] = par[iKnot];
-//        yKnots[iKnot] = par[numKnots+iKnot];
-//    }
-//    TSpline3* sp3 = new TSpline3("sp3", xKnots, yKnots, numKnots, "");
-//    
-//    //if(x[0]<95 || x[0]>) return 0;
-//    //else {
-//    //    return sp3->Eval(x[0]);
-//    //}
-//    return sp3->Eval(x[0]);
-//}
-//
-//double Spline3Histo(double *x, double *par){
-//
-//    TFile *histoFile = TFile::Open("/home/mdicostanzo/an/LPi/Analysis/SimAllMothersMerged.root", "r");
-//    TH1D *splineHisto = static_cast<TH1D*>(histoFile->Get("Pairs/hSE_2113122_NoDirectSigmaXi_smearednew"));
-//    TSpline3* sp3 = new TSpline3(splineHisto);
-//    
-//    return sp3->Eval(x[0]);
-//
-//}
+double Spline5(double *x, double *par){
+    int numKnots = 6;
+    double xKnots[numKnots];
+    double yKnots[numKnots];
+    for(int iKnot=0; iKnot<numKnots; iKnot++){
+        xKnots[iKnot] = par[iKnot];
+        yKnots[iKnot] = par[numKnots+iKnot];
+    }
+    TSpline5* sp5 = new TSpline5("sp5", xKnots, yKnots, numKnots, "");
+    return sp5->Eval(x[0]);
+}
+
+double Spline3Range(double *x, double *par){
+    int numKnots = 10;
+    double xKnots[numKnots];
+    double yKnots[numKnots];
+    for(int iKnot=0; iKnot<numKnots; iKnot++){
+        xKnots[iKnot] = par[iKnot];
+        yKnots[iKnot] = par[numKnots+iKnot];
+    }
+    TSpline3* sp3 = new TSpline3("sp3", xKnots, yKnots, numKnots, "");
+    
+    //if(x[0]<95 || x[0]>) return 0;
+    //else {
+    //    return sp3->Eval(x[0]);
+    //}
+    return sp3->Eval(x[0]);
+}
+
+double Spline3Histo(double *x, double *par){
+
+    TFile *histoFile = TFile::Open("/home/mdicostanzo/an/LPi/Analysis/SimAllMothersMerged.root", "r");
+    TH1D *splineHisto = static_cast<TH1D*>(histoFile->Get("Pairs/hSE_2113122_NoDirectSigmaXi_smearednew"));
+    TSpline3* sp3 = new TSpline3(splineHisto);
+    
+    return sp3->Eval(x[0]);
+
+}
 
 double SillKStar(double *x, double *par) {
 

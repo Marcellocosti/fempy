@@ -93,8 +93,15 @@ class ModelFitter {
         
         cout << "Adding " << name << endl;
         if(functions.find(name)!=functions.end()){
-            this->fFitFunc.push_back(functions[name]);
+            this->fFitFunc.push_back(std::get<0>(functions[name]));
             this->fFitFuncComps.push_back(name);
+            // -1 needed because pars includes the norm of the term
+            if(pars.size()-1 != std::get<1>(functions[name])) {
+                printf("Error: wrong number of parameters for function '%s'!", name.Data());
+                exit(1);                
+            } else {
+                this->fNPars.push_back(pars.size());
+            }
         } else {
             printf("Error: function '%s' is not implemented. Exit!", name.Data());
             exit(1);
@@ -102,7 +109,6 @@ class ModelFitter {
 
         this->fAddModes.push_back(addmode);
         this->fDrawOnBaseline.push_back(onbaseline);
-        this->fNPars.push_back(pars.size());
         // Save fit settings
         for (const auto &par : pars) {
             this->fFitPars.insert({this->fFitPars.size(), par});

@@ -30,21 +30,6 @@ class ModelFitter {
         this->fBaselineIdx = basIdx; 
     }
 
-    void DrawLegend(TVirtualPad *pad, double lowX, double lowY, double highX, double highY, 
-                    std::vector<TString> labels = {}) {
-        TLegend *legend = new TLegend(lowX, lowY, highX, highY);
-        legend->AddEntry(this->fFitHist, labels[0].Data(), "lp");
-        legend->AddEntry(this->fFit, labels[1].Data(), "l");
-        for(int iLabel=2; iLabel<labels.size(); iLabel++) {
-            if(labels[iLabel].Contains("lambda_flat")) continue;
-            legend->AddEntry(this->fFitFuncEval[iLabel-2], labels[iLabel].Data(), "l");
-        }
-        legend->SetBorderSize(0);
-        legend->SetTextSize(0.045);
-        legend->Draw("same");
-        pad->Update();
-    }
-
     void DrawSpline(TVirtualPad *pad, TH1* hist, 
                     std::string name=";k* (MeV/c);Counts") {
         pad->cd();
@@ -254,30 +239,38 @@ class ModelFitter {
     /*
     Define a canvas before calling this function and pass gPad as TVirtualPad
     */
-    void Draw(TVirtualPad *pad, std::vector<TString> addComps = {""}, double lowRangeUser=0.0, double uppRangeUser=1.05, 
-              std::string title=";k* (MeV/c);C(k*)") {
+    void Draw(TVirtualPad *pad, std::vector<TString> legLabels, std::vector<double> legCoords, 
+              std::vector<bool> onBaseline, int linesThickness, std::vector<TString> addComps = {""}, 
+              double lowRangeUser=0.0, double uppRangeUser=1.05, std::string title=";k* (MeV/c);C(k*)") {
 
-        EvaluateComponents(addComps); 
+        EvaluateComponents(onBaseline, addComps); 
     
         pad->cd();
         double yMinDraw = lowRangeUser;
         double yMaxDraw = uppRangeUser + fFitHist->GetMaximum();
         
+        TLegend *legend = new TLegend(legCoords[0], legCoords[1], legCoords[2], legCoords[3]);
+        legend->AddEntry(this->fFitHist, legLabels[0].Data(), "lp");
+        legend->AddEntry(this->fFit, legLabels[1].Data(), "l");
+
         //gPad->DrawFrame(fFitRangeMin, yMinDraw, fFitRangeMax, yMaxDraw, title.data());
         gPad->DrawFrame(fFitRangeMin, yMinDraw, 2000, yMaxDraw, title.data());
         this->fFit->SetNpx(300);
         this->fFit->SetLineColor(kRed);
-        this->fFit->SetLineWidth(3);
+        this->fFit->SetLineWidth(linesThickness);
         this->fFit->DrawF1(fFitRangeMin+1,1000,"same");
         pad->Update();
         
-        std::vector<Color_t> colors = {kBlue, kAzure + 2, kGreen, kBlue + 2, kOrange, kCyan, kBlack, kMagenta, kYellow};
+        std::vector<Color_t> colors = {kMagenta + 3, kAzure + 2, kGreen, kBlue + 2, kOrange, kCyan, kBlack};
         for(int iFuncEval=0; iFuncEval<fFitFuncEval.size(); iFuncEval++) {
             this->fFitFuncEval[iFuncEval]->SetNpx(300);
-            this->fFitFuncEval[iFuncEval]->SetLineColor(colors[iFuncEval]);
-            this->fFitFuncEval[iFuncEval]->SetLineWidth(3);
+            this->fFitFuncEval[iFuncEval]->SetLineColor(colors[iFuncEval]); //.data());
+            this->fFitFuncEval[iFuncEval]->SetLineWidth(linesThickness);
             this->fFitFuncEval[iFuncEval]->DrawF1(fFitRangeMin+1,1000,"same");
             pad->Update();
+            if(legLabels[iFuncEval+2].Contains("lambda_flat")) continue;
+            //legend->AddEntry(this->fFitFuncEval[iLabel-2], labels[iLabel].Data(), "l");
+            legend->AddEntry(this->fFitFuncEval[iFuncEval], legLabels[iFuncEval+2].Data(), "l");
         }
     
         fFitHist->GetYaxis()->SetRangeUser(yMinDraw, yMaxDraw); 
@@ -288,6 +281,12 @@ class ModelFitter {
         fFitHist->SetLineWidth(3);
         fFitHist->Draw("same pe");
         pad->Update();
+
+        legend->SetBorderSize(0);
+        legend->SetTextSize(0.045);
+        legend->Draw("same");
+        pad->Update();
+
     }
 
     void Debug() {
@@ -318,7 +317,7 @@ class ModelFitter {
 
    private:
 
-    void EvaluateComponents(std::vector<TString> addComps = {""}) {
+    void EvaluateComponents(std::vector<bool> onBaseline, std::vector<TString> addComps = {""}) {
         
         int normParNumber = 0;
         for(int iNorm=0; iNorm<fNPars.size()-1; iNorm++) {

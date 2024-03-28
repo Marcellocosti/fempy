@@ -115,7 +115,7 @@ for fitcf in cfg['fitcfs']:
                 splinedHisto.Rebin(term['rebin'])
             initPars = [(key, term['params'][key][0], term['params'][key][1], 
                          term['params'][key][2]) for key in term['params']]
-            modelFitters[-1].AddSplineHisto(term['template'], splinedHisto, initPars, term['addmode'], term['onbaseline'])
+            modelFitters[-1].AddSplineHisto(term['template'], splinedHisto, initPars, term['addmode'])
             cSplinedHisto = TCanvas(f'c{term["template"]}', '', 600, 600)
             modelFitters[-1].DrawSpline(cSplinedHisto, splinedHisto)
             oFile.cd(fitcf['fitname'])
@@ -145,7 +145,7 @@ for fitcf in cfg['fitcfs']:
                                      term['params'][key][2]))
 
             print(initPars)
-            modelFitters[-1].Add(term['func'], initPars, term['addmode'], term['onbaseline'])
+            modelFitters[-1].Add(term['func'], initPars, term['addmode'])
                 
     # perform the fit and save the result
     oFile.cd(fitcf['fitname'])
@@ -167,9 +167,9 @@ for fitcf in cfg['fitcfs']:
     fitHisto.Write()
     fitFunction = modelFitters[-1].GetFitFunction()
     fitFunction.Write()
-    for compToFile in compsToFile:
+    for iCompToFile, compToFile in enumerate(compsToFile):
         if('spline' not in fitcf['model'][iTerm]['func']):
-            modelFitters[-1].GetComponent(compToFile).Write(term['func'])
+            modelFitters[-1].GetComponent(compToFile, onBaseline[iCompToFile]).Write(term['func'])
         modelFitters[-1].GetComponentPars(compToFile).Write('h' + fitcf['model'][compToFile]['func'][0].upper() + 
                                                             fitcf['model'][compToFile]['func'][1:])
     

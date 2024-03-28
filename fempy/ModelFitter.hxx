@@ -74,7 +74,7 @@ class ModelFitter {
     It is your responsibility to give the correct number of parameters. All fit parameters must be initialized.
     */
 
-    void Add(TString name, std::vector<std::tuple<std::string, double, double, double>> pars, std::string addmode, bool onbaseline) {
+    void Add(TString name, std::vector<std::tuple<std::string, double, double, double>> pars, std::string addmode) {
         
         cout << "Adding " << name << endl;
         if(functions.find(name)!=functions.end()){
@@ -93,15 +93,14 @@ class ModelFitter {
         }
 
         this->fAddModes.push_back(addmode);
-        this->fDrawOnBaseline.push_back(onbaseline);
+        
         // Save fit settings
         for (const auto &par : pars) {
             this->fFitPars.insert({this->fFitPars.size(), par});
         }
     }
 
-    void AddSplineHisto(TString name, TH1* splinedhisto, std::vector<std::tuple<std::string, double, double, double>> pars, std::string addmode, bool onbaseline,
-                        TString legend="ciaospl") {
+    void AddSplineHisto(TString name, TH1* splinedhisto, std::vector<std::tuple<std::string, double, double, double>> pars, std::string addmode) {
 
         TH1D *splineHisto = static_cast<TH1D*>(splinedhisto);
         TSpline3* sp3 = new TSpline3(splinedhisto);
@@ -109,7 +108,7 @@ class ModelFitter {
         this->fFitFuncComps.push_back(name);
         
         this->fAddModes.push_back(addmode);
-        this->fDrawOnBaseline.push_back(onbaseline);
+        
         this->fNPars.push_back(pars.size());
         // Save fit settings
         for (const auto &par : pars) {
@@ -117,12 +116,12 @@ class ModelFitter {
         }
     }
 
-    TF1 *GetComponent(int icomp) {
+    TF1 *GetComponent(int icomp, bool onBaseline) {
         if(!this->fFit) {
             throw std::invalid_argument("Fit not performed, component cannot be evaluated!");
         }
         
-        if(this->fDrawOnBaseline[icomp]) {
+        if(onBaseline) {
             TF1 *compWithoutNormAndBaseline = new TF1(this->fFitFuncComps[icomp],
                 [&, this, icomp](double *x, double *pars) {
                    return ( this->fFitFuncEval[icomp]->Eval(x[0]) - 
@@ -373,8 +372,8 @@ class ModelFitter {
             
             if(!toBeSummed) {
                 this->fFitFuncEval.push_back(new TF1(this->fFitFuncComps[iFunc],
-                    [&, this, iFunc, components](double *x, double *pars) {
-                        if(this->fDrawOnBaseline[iFunc]) {
+                    [&, this, iFunc, components, onBaseline](double *x, double *pars) {
+                        if(onBaseline[iFunc]) {
                             return this->fNorms[iFunc]*components[iFunc]->Eval(x[0]) + 
                                    this->fNorms[this->fBaselineIdx]*components[this->fBaselineIdx]->Eval(x[0]);
                         } else if(this->fFitFuncComps[iFunc].Contains("Lednicky")) {
@@ -390,13 +389,13 @@ class ModelFitter {
             for(int iAddComp=0; iAddComp<addComps.size(); iAddComp++) {
                 int compNumber = this->fFitFuncEval.size();
                 this->fFitFuncEval.push_back(new TF1(Form("Comp_%i", compNumber),
-                        [&, this, nTerms, addComps, iAddComp, components](double *x, double *pars) {
+                        [&, this, nTerms, addComps, iAddComp, components, onBaseline](double *x, double *pars) {
                         double sum = 0.;
                         bool addBaseline = true;
                         for(int iComp=0; iComp<nTerms; iComp++) {
                             if(addComps[iAddComp].Contains(std::to_string(iComp))) {
                                 sum += this->fNorms[iComp]*components[iComp]->Eval(x[0]);
-                                if(!this->fDrawOnBaseline[iComp]) addBaseline=false;
+                                if(!onBaseline[iComp]) addBaseline=false;
                             }
                         }
                         if(addBaseline) {
@@ -413,7 +412,6 @@ class ModelFitter {
     std::vector<double (*)(double *x, double *par)> fFitFunc;       // List of function describing each term of the CF model
     double fBaselineIdx;                                            // Index of baseline function element
     std::vector<TString> fFitFuncComps;                             // Function names of fit components
-    std::vector<bool> fDrawOnBaseline;                              // Options to draw fit components on the baseline function
     std::vector<TSpline3 *> fFitSplines;                            // Spline fit components
     std::vector<TF1*> fFitFuncEval;                                 // Fit components evaluated after the fitting
     std::vector<int> fNPars;                                        // Keeps track of how many parameters each function has

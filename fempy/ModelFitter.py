@@ -89,74 +89,59 @@ for fitcf in cfg['fitcfs']:
 
     compsToFile = []
     # for loop over the functions entering in the model
-    for iFunc, func in enumerate(fitcf['model']):
+    for iTerm, term in enumerate(fitcf['model']):
         
-        if('isbaseline' in func):
-            if(func['isbaseline']):
-                modelFitters[-1].SetBaselineIdx(iFunc)
-        if('savetofile' in func):
-            compsToFile.append(iFunc)
+        if('isbaseline' in term):
+            if(term['isbaseline']):
+                modelFitters[-1].SetBaselineIdx(iTerm)
+        if('savetofile' in term):
+            compsToFile.append(iTerm)
         
         # fit function parameters initialization
-        initPars = []
+        #initPars = []
     
-        if('splinehisto' in func['funcname']):
-            histoFile = TFile(func['histofile'])
-            splinedHisto = ChangeUnits(Load(histoFile, func['histopath']), 1000)
-            if('rebin' in func):
-                splinedHisto.Rebin(func['rebin'])
-            if('p0' in func):
-                initPars = [(func['norm'][0], func['norm'][1], func['norm'][2], func['norm'][3]),
-                            (func['p0'][0], func['p0'][1], func['p0'][2], func['p0'][3])]
-            else:
-                initPars = [(func['norm'][0], func['norm'][1], func['norm'][2], func['norm'][3])]
-            modelFitters[-1].AddSplineHisto(func['funcname'], splinedHisto, initPars, func['addmode'], func['onbaseline'])
-            cSplinedHisto = TCanvas(f'c{func["funcname"]}', '', 600, 600)
+        if('template' in term):
+            print(term['template'])
+            histoFile = TFile(term['histofile'])
+            splinedHisto = ChangeUnits(Load(histoFile, term['histopath']), 1000)
+            if('rebin' in term):
+                splinedHisto.Rebin(term['rebin'])
+            initPars = [(key, term['params'][key][0], term['params'][key][1], 
+                         term['params'][key][2]) for key in term['params']]
+            modelFitters[-1].AddSplineHisto(term['template'], splinedHisto, initPars, term['addmode'], term['onbaseline'])
+            cSplinedHisto = TCanvas(f'c{term["template"]}', '', 600, 600)
             modelFitters[-1].DrawSpline(cSplinedHisto, splinedHisto)
             oFile.cd(fitcf['fitname'])
             cSplinedHisto.Write()
-            
-        #elif('TF1' in func['funcname']):
-        #    funcFile = TFile(func['TF1file'])
-        #    fixedTF1 = Load(funcFile, func['TF1path'])
-        #    initPars = [(func['norm'][0], func['norm'][1], func['norm'][2], func['norm'][3])]
-        #    modelFitters[-1].AddTF1(func['funcname'], fixedTF1, initPars, func['addmode'], func['onbaseline'])
-        #    cFixedTF1 = TCanvas(f'c{func["funcname"]}', '', 600, 600)
-        #    modelFitters[-1].DrawTF1Comp(cFixedTF1, fixedTF1)
-        #    oFile.cd(fitcf['fitname'])
-        #    cFixedTF1.Write()
         
-        else:  
-            #if('spline3' in func['funcname']):
-            #    for nKnot, xKnot in enumerate(func['xknots']):
+        elif('func' in term):
+            print(term['func'])
+            #if('spline3' in term['func']):
+            #    for nKnot, xKnot in enumerate(term['xknots']):
             #        initPars.append([f'xKnot{nKnot}', xKnot, xKnot, xKnot])
-            #    for nKnot, xKnot in enumerate(func['xknots']):
+            #    for nKnot, xKnot in enumerate(term['xknots']):
             #        nBin = prefitHisto.FindBin(xKnot)
             #        yKnot = prefitHisto.GetBinContent(nBin)
             #        initPars.append([f'yKnot{nKnot}', yKnot, yKnot - (yKnot/100)*30, yKnot + (yKnot/100)*30])
             #else:
-            if('fixparsfromfuncts' in func):
-                histoFuncFile = TFile(func['histofuncfile'])
-                histoFuncParams = Load(histoFuncFile, func['histofuncpath'])
-                for iPar in func['fixparsfromfuncts']:
-                    func[f'p{iPar[0]}'] = [f'p{iPar[0]}_prefit', 
-                                           histoFuncParams.GetBinContent(iPar[1]), 0, -1]
+            
+            if('fixparsfromfuncts' in term):
+                histoFuncFile = TFile(term['histofuncfile'])
+                histoFuncParams = Load(histoFuncFile, term['histofuncpath'])
 
-            initPars = [(func[f'p{iPar}'][0], func[f'p{iPar}'][1], func[f'p{iPar}'][2], 
-                         func[f'p{iPar}'][3]) for iPar in range(func['npars'])]
+            initPars = []
+            for key in term['params']:
+                if("fromfunct" == term['params'][key][0]):
+                    initPars.append((key, histoFuncParams.GetBinContent(term['params'][key][1]), 0, -1))
+                else:
+                    initPars.append((key, term['params'][key][0], term['params'][key][1], 
+                                     term['params'][key][2]))
 
-            if('lambdapar' in func):
-                lambdaParam = [("lambdapar_" + func['funcname'], func['lambdapar'], 0, -1)]
-                initPars = lambdaParam + initPars
-                modelFitters[-1].Add(func['funcname'], initPars, func['addmode'], func['onbaseline'])
-            if('lambdagen' in func):
-                lambdaGen = [("lambda_gen_" + func['funcname'], func['lambdagen'], 0, -1)]
-                initPars = lambdaGen + initPars
-                modelFitters[-1].Add(func['funcname'], initPars, func['addmode'], func['onbaseline'])
-            if('norm' in func):
-                normParam = [(func['norm'][0], func['norm'][1], func['norm'][2], func['norm'][3])]
-                initPars = normParam + initPars
-                modelFitters[-1].Add(func['funcname'], initPars, func['addmode'], func['onbaseline'])
+            print(initPars)
+            modelFitters[-1].Add(term['func'], initPars, term['addmode'], term['onbaseline'])
+        
+        else:
+            pass
                 
     # perform the fit and save the result
     oFile.cd(fitcf['fitname'])
@@ -176,10 +161,10 @@ for fitcf in cfg['fitcfs']:
     fitFunction = modelFitters[-1].GetFitFunction()
     fitFunction.Write()
     for compToFile in compsToFile:
-        if('spline' not in fitcf['model'][iFunc]['funcname']):
-            modelFitters[-1].GetComponent(compToFile).Write(func['funcname'])
-        modelFitters[-1].GetComponentPars(compToFile).Write('h' + fitcf['model'][compToFile]['funcname'][0].upper() + 
-                                                            fitcf['model'][compToFile]['funcname'][1:])
+        if('spline' not in fitcf['model'][iTerm]['func']):
+            modelFitters[-1].GetComponent(compToFile).Write(term['func'])
+        modelFitters[-1].GetComponentPars(compToFile).Write('h' + fitcf['model'][compToFile]['func'][0].upper() + 
+                                                            fitcf['model'][compToFile]['func'][1:])
     
     with open(oFileNameCfg, 'a') as file:
         file.write('-----------------------------------')
@@ -189,11 +174,13 @@ for fitcf in cfg['fitcfs']:
         for iPar in range(fitFunction.GetNpar()):
             file.write(fitFunction.GetParName(iPar) + ": " + str(fitFunction.GetParameter(iPar)))
             file.write('\n')
-    
+    modelFitters[-1].Debug()
     #pdfFileName = fitcf['fitname'] + cfg["suffix"] + ".pdf"
     #pdfFilePath = os.path.join(cfg['odir'], pdfFileName) 
     #cFit.SaveAs(pdfFilePath)
+            
 
 oFile.Close()
 print(f'Config saved in {oFileNameCfg}')
 print(f'output saved in {oFileName}')
+#

@@ -296,7 +296,6 @@ class ModelFitter {
 
         EvaluateComponents(addComps); 
 
-        cout << "CIAO1" << endl;
         pad->cd();
         double yMinDraw = lowRangeUser;
         double yMaxDraw = uppRangeUserMult * fFitHist->GetMaximum();
@@ -308,8 +307,7 @@ class ModelFitter {
         this->fFit->SetLineWidth(3);
         this->fFit->DrawF1(fFitRangeMin+1,1000,"same");
         pad->Update();
-        cout << "CIAO2" << endl;
-
+        
         std::vector<Color_t> colors = {kBlue, kAzure + 2, kGreen, kBlue + 2, kOrange, kCyan, kBlack, kMagenta, kYellow};
         for(int iFuncEval=0; iFuncEval<fFitFuncEval.size(); iFuncEval++) {
             cout << "iFuncEval " << iFuncEval << " fFitFuncEval size: " << fFitFuncEval.size() << endl;
@@ -319,8 +317,7 @@ class ModelFitter {
             this->fFitFuncEval[iFuncEval]->DrawF1(fFitRangeMin+1,1000,"same");
             pad->Update();
         }
-        cout << "CIAO3" << endl;
-
+    
         fFitHist->GetYaxis()->SetRangeUser(yMinDraw, yMaxDraw); 
         fFitHist->SetMarkerSize(0.3);
         fFitHist->SetMarkerStyle(20);
@@ -329,7 +326,6 @@ class ModelFitter {
         fFitHist->SetLineWidth(3);
         fFitHist->Draw("same pe");
         pad->Update();
-        cout << "CIAO4" << endl;
     }
 
     void Debug() {

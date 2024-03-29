@@ -9,42 +9,50 @@ fitcfs:
     fitname: MC_LambdaPiPlus                        # folder name for the fit
     fitrange: [0, 500]          
     rejectrange: [150, 300]                         # range not considered for the fit
+    linethick: 3                                    # thickness of lines in the Canva
+    datalabel: "legend label for data points"
+    fitfunclabel: "legend label for total fit function"
     legcoords: [0.6, 0.65, 0.8, 0.85]               # [x_low, y_low, x_upp, y_upp]
-    legentries: ["label1", "label2", "label3"]      # legend labels for fit components, the label 
-                                                    # "lambda_flat" will not be displayed
-
-    model:                                      # functions from the file Functions.cxx and Splines of histogram can be added                              
-    -   funcname: name_of_func                  # the corresponding function in Functions.cxx will be considered
-        norm: ['par_name', guess,               # every function is multiplied by a normalization constant, which comes as a
-               low_bound, upp_bound]            # free fit parameter, to fix it put low_bound>upp_bound. In case of the lambda
-                                                # parameters, they are fixed and it is only required the numerical value
-        npars: 4                                # number of parameters for the function (excluding the normalization)
-        p0: ['p0pol4', 0, -8, 8]                # the i-th parameter corresponds to the enter pi 
-        p1: ['p1pol4', 0, -8, 8]
-        p2: ['p2pol4', 0, -8, 8]
-        p3: ['p3pol4', 0, -8, 8]
-        addmode: sum                            # or mult, determines if the function multiplies or sums to the result given by
+    model:                                      # three types of contributions to the fit model: func, spline, template                              
+    -   func: name_of_func                      # the corresponding function in Functions.cxx will be considered
+        fixparsfromfuncts: true                 # true if some parameters come from some already fitted functions
+        histofuncfile: /path/to/file/containing/histo/with/parameters/values.root
+        histofuncpath: internal/path
+        params:
+            iparname: [guess, low_bound, upp_bound]     # every function is multiplied by a normalization constant, which comes as a
+                                                        # free fit parameter, to fix it put low_bound>upp_bound. In case of the lambda
+                                                        # parameters, they are fixed and it is only required the numerical value
+            parFixedFromFuncName: ['fromfunct', bin_of_histofuncpath_of_interest]
+        legentry: "label"
+        linecolor: EColor.kOrange
+        addmode: '+'                            # or '*', determines if the function multiplies or sums to the result given by
                                                 # the combination of the previous components
         isbaseline: true                        # flag this component as baseline for drawing purposes
         onbaseline: false                       # option to draw this component adding the baseline or not 
         savetofile: true                        # save this function to file
-    -   funcname: name_of_spline      
+    -   template: name_of_spline
         histofile: /file/of/histo/to/be/splined.root
         histopath: /internal/path/of/histo/to/be/splined
         rebin: 2                                # rebin the histo
-        norm: ['norm', guess,                   # splines are added with normalization and shift fit parameters                   
-               low_bound, upp_bound]
-        p0: ['shift', guess, low_bound, upp_bound]
-        addmode: sum
+        legentry: "label"
+        linecolor: EColor.kMagenta
+        linethickness: 3
+        params:
+            norm_par_name: [0, -1, 1]
+            shift_par_name: [0, -1, 1]
+        addmode: '+'
         onbaseline: true
-    -   funcname: flatpol3                      # specific parameters of the model components can be initialized
-        npars: 5                                # by values stored in TH1D contained in root files
-        addmode: mult
-        isbaseline: true
+    -   spline: spline3             # name of spline function to be considered
+        histofile: /path/of/file/of/interest.root
+        histopath: 'internal/path/of/histo'
+        changeunits: 1000           # optional, to change the histo units
+        rebin: 2
+        legentry: 'spline'
+        linecolor: EColor.kMagenta
+        linethickness: 3
+        params:
+            splnorm_parname: [1, 0, -1]
+            xknots: [50, 100, 150, 200, 250, 300, 350, 400, 450, 500]  # specific for splines, set x knots positions
+        yboundperc: 20              # bounds, in percentage, for variation of the y parameters with respect to histo values
+        addmode: '+'
         onbaseline: false
-        fixparsfromfuncts: [[0,2], [1,3], [2,4], [3,5]]     # [[par_of_model_component, histo_bin_content]]
-        norm: ['norm_par_name', 0.98, 0, 2]
-        p4: ['par_name', 0.5, 0, 1]                         # parameters that are not fixed are given wit the same 
-                                                            # syntax as before
-        histofuncfile: /path/to/file/containing/histo/with/parameters/values.root
-        histofuncpath: internal/path

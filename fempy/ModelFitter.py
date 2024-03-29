@@ -87,6 +87,7 @@ for fitcf in cfg['fitcfs']:
     oFile.mkdir(fitcf['fitname'])
     oFile.cd(fitcf['fitname'])
 
+    baselineIdx = -1
     linesThickness = fitcf['linethick']
     compsToFile = []
     onBaseline = []
@@ -99,7 +100,7 @@ for fitcf in cfg['fitcfs']:
         
         if('isbaseline' in term):
             if(term['isbaseline']):
-                modelFitters[-1].SetBaselineIdx(iTerm)
+                baselineIdx = iTerm
         if('savetofile' in term):
             compsToFile.append(iTerm)
         
@@ -156,20 +157,18 @@ for fitcf in cfg['fitcfs']:
     print(colors)
     if('drawsumcomps' in fitcf):
         modelFitters[-1].Draw(cFit, legLabels, fitcf['legcoords'], onBaseline,
-                              linesThickness, fitcf['drawsumcomps'])
+                              linesThickness, baselineIdx, fitcf['drawsumcomps'])
     else:
         modelFitters[-1].Draw(cFit, legLabels, fitcf['legcoords'], onBaseline,
-                              linesThickness)
+                              linesThickness, baselineIdx)
         
-    #modelFitters[-1].DrawLegend(cFit, fitcf['legcoords'][0], fitcf['legcoords'][1], fitcf['legcoords'][2], 
-    #                         fitcf['legcoords'][3], fitcf['legentries'])
     cFit.Write()
     fitHisto.Write()
     fitFunction = modelFitters[-1].GetFitFunction()
     fitFunction.Write()
     for iCompToFile, compToFile in enumerate(compsToFile):
         if('spline' not in fitcf['model'][iTerm]['func']):
-            modelFitters[-1].GetComponent(compToFile, onBaseline[iCompToFile]).Write(term['func'])
+            modelFitters[-1].GetComponent(compToFile, baselineIdx).Write(term['func'])
         modelFitters[-1].GetComponentPars(compToFile).Write('h' + fitcf['model'][compToFile]['func'][0].upper() + 
                                                             fitcf['model'][compToFile]['func'][1:])
     

@@ -103,30 +103,34 @@ for iFit, fitcf in enumerate(cfg['fitcfs']):
         onBaseline.append(term['onbaseline'])
 
         if('template' in term):
-            print(term['template'])
             histoFile = TFile(term['histofile'])
             splinedHisto = ChangeUnits(Load(histoFile, term['histopath']), 1000)
             if('rebin' in term):
                 splinedHisto.Rebin(term['rebin'])
             initPars = [(key, term['params'][key][0], term['params'][key][1], 
                          term['params'][key][2]) for key in term['params']]
-            modelFitters[-1].AddSplineHisto(term['template'], splinedHisto, initPars, term['addmode'])
+            modelFitters[-1].Add(term['template'], splinedHisto, initPars, term['addmode'])
             cSplinedHisto = TCanvas(f'c{term["template"]}', '', 600, 600)
             modelFitters[-1].DrawSpline(cSplinedHisto, splinedHisto)
             oFile.cd(fitcf['fitname'])
             cSplinedHisto.Write()
         
+        elif('spline' in term):
+            histoFile = TFile(term['histofile'])
+            toBeSplinedHisto = ChangeUnits(Load(histoFile, term['histopath']), term['changeunits'])
+            initPars = []
+            normPar = list(term['params'].keys())[0]
+            initPars.append((normPar, term['params'][normPar][0], 
+                             term['params'][normPar][1], term['params'][normPar][2]))
+            for nKnot, xKnot in enumerate(term['params']['xknots']):
+                initPars.append([f'xKnot{nKnot}', xKnot, xKnot, xKnot])
+            for nKnot, xKnot in enumerate(term['params']['xknots']):
+                nBin = toBeSplinedHisto.FindBin(xKnot)
+                yKnot = toBeSplinedHisto.GetBinContent(nBin)
+                initPars.append([f'yKnot{nKnot}', yKnot, yKnot - (yKnot/100)*term['yboundperc'], yKnot + (yKnot/100)*term['yboundperc']])
+            modelFitters[-1].Add(term['spline'], initPars, term['addmode'])
+        
         elif('func' in term):
-            print(term['func'])
-            #if('spline3' in term['func']):
-            #    for nKnot, xKnot in enumerate(term['xknots']):
-            #        initPars.append([f'xKnot{nKnot}', xKnot, xKnot, xKnot])
-            #    for nKnot, xKnot in enumerate(term['xknots']):
-            #        nBin = prefitHisto.FindBin(xKnot)
-            #        yKnot = prefitHisto.GetBinContent(nBin)
-            #        initPars.append([f'yKnot{nKnot}', yKnot, yKnot - (yKnot/100)*30, yKnot + (yKnot/100)*30])
-            #else:
-            
             if('fixparsfromfuncts' in term):
                 histoFuncFile = TFile(term['histofuncfile'])
                 histoFuncParams = Load(histoFuncFile, term['histofuncpath'])
@@ -161,7 +165,7 @@ for iFit, fitcf in enumerate(cfg['fitcfs']):
     fitFunction = modelFitters[-1].GetFitFunction()
     fitFunction.Write()
     for iCompToFile, compToFile in enumerate(compsToFile):
-        if('spline' not in fitcf['model'][iTerm]['func']):
+        if('spline' not in fitcf['model'][iTerm] and 'template' not in fitcf['model'][iTerm]):
             modelFitters[-1].GetComponent(compToFile, baselineIdx).Write(term['func'])
         modelFitters[-1].GetComponentPars(compToFile).Write('h' + fitcf['model'][compToFile]['func'][0].upper() + 
                                                             fitcf['model'][compToFile]['func'][1:])

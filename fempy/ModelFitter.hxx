@@ -251,6 +251,10 @@ class ModelFitter {
         cout << "Drawing" << endl;
         //gPad->DrawFrame(fFitRangeMin, yMinDraw, fFitRangeMax, yMaxDraw, title.data());
         gPad->DrawFrame(fFitRangeMin, yMinDraw, 2000, yMaxDraw, title.data());
+        //gPad->DrawFrame(fFitRangeMin, yMinDraw, 2000, yMaxDraw, Form("%s;%s;%s", 
+        //                this->fFitHist->GetTitle(), this->fFitHist->GetXaxis()->GetTitle(),
+        //                this->fFitHist->GetYaxis()->GetTitle()));
+        
         this->fFit->SetNpx(300);
         this->fFit->SetLineColor(kRed);
         this->fFit->SetLineWidth(linesThickness);

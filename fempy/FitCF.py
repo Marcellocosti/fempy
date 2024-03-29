@@ -3,7 +3,7 @@ Script to perform the fit on a correlation function.
 The output file is CustomNameFromYaml_suffix.root
 
 Usage:
-python3 ModelFitter.py cfg.yml
+python3 CorrelationFitter.py cfg.yml
 
 '''
 
@@ -12,8 +12,8 @@ import argparse
 import yaml
 
 from ROOT import TFile, TCanvas, gInterpreter, TH1D
-gInterpreter.ProcessLine(f'#include "{os.environ.get("FEMPY")}fempy/ModelFitter.hxx"')
-from ROOT import ModelFitter
+gInterpreter.ProcessLine(f'#include "{os.environ.get("FEMPY")}fempy/CorrelationFitter.hxx"')
+from ROOT import CorrelationFitter
 
 from fempy import logger as log
 from fempy.utils.io import Load
@@ -73,9 +73,9 @@ for iFit, fitcf in enumerate(cfg['fitcfs']):
     if('rejectrange' in fitcf):
         lowRejectRange = fitcf['rejectrange'][0]
         uppRejectRange = fitcf['rejectrange'][1]
-        modelFitters.append(ModelFitter(fitHisto, lowFitRange, uppFitRange, lowRejectRange, uppRejectRange))
+        modelFitters.append(CorrelationFitter(fitHisto, lowFitRange, uppFitRange, lowRejectRange, uppRejectRange))
     else: 
-        modelFitters.append(ModelFitter(fitHisto, lowFitRange, uppFitRange))
+        modelFitters.append(CorrelationFitter(fitHisto, lowFitRange, uppFitRange))
         
     # directory of the fit
     oFile.mkdir(fitcf['fitname'])

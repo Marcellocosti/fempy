@@ -1,5 +1,5 @@
-#ifndef FEMPY_MODELFITTER_HXX_
-#define FEMPY_MODELFITTER_HXX_
+#ifndef FEMPY_CORRELATIONFITTER_HXX_
+#define FEMPY_CORRELATIONFITTER_HXX_
 
 #include <map>
 #include <string>
@@ -14,9 +14,9 @@
 #include "TFitResultPtr.h"
 #include "FitFunctions.cxx"
 
-class ModelFitter {
+class CorrelationFitter {
    public:
-    ModelFitter(TH1 *fithist, double fitRangeMin, double fitRangeMax, 
+    CorrelationFitter(TH1 *fithist, double fitRangeMin, double fitRangeMax, 
                          double rejectMin=0, double rejectMax=-1) {
         this->fFitHist = reinterpret_cast<TH1 *>(fithist->Clone());
         this->fFitRangeMin = fitRangeMin;
@@ -438,4 +438,4 @@ class ModelFitter {
     std::map<int, std::tuple<std::string, double, double, double>> fFitPars;    // List of fit parameters
 };
 
-#endif  // FEMPY_MODELFITTER_HXX_
+#endif  // FEMPY_CORRELATIONFITTER_HXX_

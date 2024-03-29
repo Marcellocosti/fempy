@@ -59,16 +59,10 @@ with open(args.cfg, 'r') as file:
         if(firstNonBlankChar == '#'): continue
         fileLines.append(line.rstrip())  # Strip to remove leading/trailing whitespaces
 
-oFileNameCfg = os.path.join(cfg['odir'], oFileBaseName + '_cfg.txt')
-with open(oFileNameCfg, 'w') as file:
-    for line in fileLines:
-        file.write(line)
-        file.write('\n')
-
 modelFitters = []
 
 # for loop over the correlation functions
-for fitcf in cfg['fitcfs']:
+for iFit, fitcf in enumerate(cfg['fitcfs']):
     
     # change unity of measure of histograms from GeV to MeV
     fitHisto = ChangeUnits(Load(inFileFit, fitcf['cfpath']), 1000)
@@ -171,22 +165,18 @@ for fitcf in cfg['fitcfs']:
             modelFitters[-1].GetComponent(compToFile, baselineIdx).Write(term['func'])
         modelFitters[-1].GetComponentPars(compToFile).Write('h' + fitcf['model'][compToFile]['func'][0].upper() + 
                                                             fitcf['model'][compToFile]['func'][1:])
-    
-    with open(oFileNameCfg, 'a') as file:
-        file.write('-----------------------------------')
-        file.write('\n')
-        file.write('Parameters obtained from the fit')    
-        file.write('\n')
-        for iPar in range(fitFunction.GetNpar()):
-            file.write(fitFunction.GetParName(iPar) + ": " + str(fitFunction.GetParameter(iPar)))
-            file.write('\n')
+    for iPar in range(fitFunction.GetNpar()):
+        cfg[f'Fit n°{iFit}, par {iPar}'] = fitFunction.GetParName(iPar) + ", " + str(fitFunction.GetParameter(iPar))
     modelFitters[-1].Debug()
     #pdfFileName = fitcf['fitname'] + cfg["suffix"] + ".pdf"
     #pdfFilePath = os.path.join(cfg['odir'], pdfFileName) 
     #cFit.SaveAs(pdfFilePath)
-            
-
+    
+oFileNameCfg = os.path.join(cfg['odir'], oFileBaseName + '_cfg.txt')            
+print(cfg)
+with open(oFileNameCfg, 'w') as outfile:
+    yaml.dump(cfg, outfile, default_flow_style=False)
+    
 oFile.Close()
 print(f'Config saved in {oFileNameCfg}')
 print(f'output saved in {oFileName}')
-#

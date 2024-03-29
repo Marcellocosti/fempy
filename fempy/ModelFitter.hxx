@@ -96,15 +96,16 @@ class ModelFitter {
         }
     }
 
-    void AddSplineHisto(TString name, TH1* splinedhisto, std::vector<std::tuple<std::string, double, double, double>> pars, std::string addmode) {
-
-        TH1D *splineHisto = static_cast<TH1D*>(splinedhisto);
-        TSpline3* sp3 = new TSpline3(splinedhisto);
-        this->fFitSplines.push_back(sp3);
+    void Add(TString name, TH1* hist, std::vector<std::tuple<std::string, double, double, double>> pars, std::string addmode) {
+        TH1D *splineHisto = static_cast<TH1D*>(hist);
+        TSpline3* sp3 = new TSpline3(hist);
+        
+        this->Add(name, sp3, pars, addmode);
+    }
+    void Add(TString name, TSpline3* spline, std::vector<std::tuple<std::string, double, double, double>> pars, std::string addmode) {
+        this->fFitSplines.push_back(spline);
         this->fFitFuncComps.push_back(name);
-        
-        this->fAddModes.push_back(addmode);
-        
+        this->fAddModes.push_back(addmode); 
         this->fNPars.push_back(pars.size());
         // Save fit settings
         for (const auto &par : pars) {
@@ -267,6 +268,7 @@ class ModelFitter {
             this->fFitFuncEval[iFuncEval]->SetLineWidth(linesThickness);
             cout << "Ciao4" << endl;
             this->fFitFuncEval[iFuncEval]->DrawF1(fFitRangeMin+1,1000,"same");
+            this->fFitFuncEval[iFuncEval]->Eval(100);
             cout << "Ciao5" << endl;
             pad->Update();
             cout << "Ciao6" << endl;
@@ -274,6 +276,7 @@ class ModelFitter {
             cout << "Ciao7" << endl;
             legend->AddEntry(this->fFitFuncEval[iFuncEval], legLabels[iFuncEval+2].Data(), "l");
             cout << "Ciao8" << endl;
+            cout << endl;
         }
     
         cout << "Drawing" << endl;
@@ -339,7 +342,7 @@ class ModelFitter {
         for(int iTerm=0; iTerm<nTerms; iTerm++) {
             std::string compName = static_cast<std::string>(this->fFitFuncComps[iTerm]);
             cout << "Name of the component: " << compName << endl;
-            if(this->fFitFuncComps[iTerm].Contains("spline")) {
+            if(this->fFitFuncComps[iTerm].Contains("spline") && !this->fFitFuncComps[iTerm].Contains("spline3")) {
                 cout << "Set par " << this->fFit->GetParameter(setPars) << endl;
                 cout << "Set par +1 " << this->fFit->GetParameter(setPars+1) << endl;
                 cout << endl;
@@ -376,6 +379,7 @@ class ModelFitter {
             }
             
             if(!toBeSummed) {
+                cout << "Component: " << this->fFitFuncComps[iFunc] << endl;
                 this->fFitFuncEval.push_back(new TF1(this->fFitFuncComps[iFunc],
                     [&, this, iFunc, components, onBaseline, basIdx](double *x, double *pars) {
                         if(onBaseline[iFunc]) {

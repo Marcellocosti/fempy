@@ -75,28 +75,28 @@ hMEMC.Sumw2()
 hSubSEME_Data = hSEData - hMEData
 hSubSEME_Data.Scale(1/hSubSEME_Data.Integral())
 hSubSEME_Data.Sumw2()
-hSubSEME_Data.Write('SE-ME_Data')
 
 # Subtraction on MC
 hSubSEME_MC = hSEMC - hMEMC
 hSubSEME_MC.Scale(1/hSubSEME_MC.Integral())
 hSubSEME_MC.Sumw2()
-hSubSEME_MC.Write('SE-ME_MC')
 
 # Write SE and ME histograms to file
 #hSEMC.Scale(hSEData.Integral(firstBin, lastBin) / hSEMC.Integral(firstBin, lastBin))
 #hMEMC.Scale(hSEData.Integral(firstBin, lastBin) / hMEMC.Integral(firstBin, lastBin))
 hSEData.Write('hSEData')
 hMEData.Write('hMEData')
+hSubSEME_Data.Write('SE-ME_Data')
 hSEMC.Write('hSEMC')
 hMEMC.Write('hMEMC')
+hSubSEME_MC.Write('SE-ME_MC')
 
 # Fit the subtraction of SE and ME in MC, excluding the peak
 MCFit = Fitter(hSubSEME_MC, 0, 400)
 initParsMCFitPol4 = [("p0", 0, -1, 1), ("p1", 0, -1, 1), ("p2", 0, -1, 1), ("p3", 0, -1, 1), ("p4", 0, -1, 1)]
 MCFit.Add("pol4", initParsMCFitPol4)
 MCFit.Fit(150, 300)
-cFit = TCanvas('cFit_SE-ME_MC', '', 600, 600)
+cFit = TCanvas('cFit_SE-ME_MC_nopeak', '', 600, 600)
 MCFit.Draw(cFit)
 cFit.Write()
 
@@ -104,11 +104,11 @@ cFit.Write()
 MCFitFunc = MCFit.GetFunction() 
 #hInvMass = hSubSEME_Data.Clone('ICESM')
 #for iBin in range(hInvMass.GetNbinsX()):
-hInvMass = TH1D("Data-MCFit", "Data-MCFit", 100, 0, 400)
+hInvMass = TH1D("Data-MCFit_nopeak", "Data-MCFit_nopeak", 100, 0, 400)
 for iBin in range(100):
     hInvMass.SetBinContent(iBin + 1, hSubSEME_Data.GetBinContent(iBin + 1) - 
                                      MCFitFunc.Eval(hSubSEME_Data.GetBinCenter(iBin + 1)))
-hInvMass.Write('Data-MCFit')
+hInvMass.Write('Data-MCFit_nopeak')
 
 # Fit the subtraction describing the peak with a Breit Wigner
 MCFitWithBW = Fitter(hSubSEME_MC, 0, 400)
@@ -120,26 +120,26 @@ MCFitWithBW.Add("pol4", initParsMCFitPol4BW)
 initParsMCFitWithBW = [("yield", 0.35, 0.3, 0.5), ("mean", 204, 202, 206), ("width", 18, 14, 20)]
 MCFitWithBW.Add("gaus", initParsMCFitWithBW)
 MCFitWithBW.Fit()
-cFit = TCanvas('cFit_SE-ME_MC_with_bw', '', 600, 600)
+cFit = TCanvas('cFit_SE-ME_MC_peakbw', '', 600, 600)
 MCFitWithBW.Draw(cFit)
 cFit.Write()
 
 # Subtraction between data and MC fit including the Breit Wigner
 MCFitWithBWFunc = MCFitWithBW.GetFunction() 
-hInvMassBW = TH1D("Data-MCFit_bw", "Data-MCFit_bw", 100, 0, 400)
+hInvMassBW = TH1D("Data-MCFit_peakbw", "Data-MCFit_peakbw", 100, 0, 400)
 for iBin in range(100):
     hInvMassBW.SetBinContent(iBin + 1, hSubSEME_Data.GetBinContent(iBin + 1) - 
                                      MCFitWithBWFunc.Eval(hSubSEME_Data.GetBinCenter(iBin + 1)))
-hInvMassBW.Write('Data-MCFit_bw')
+hInvMassBW.Write('Data-MCFit_peakbw')
 
 # Subtraction between data and MC spline
 splineMCHisto = TSpline3(hSubSEME_MC)
-hInvMassSpline = TH1D("Data-MC_Spline", "Data-MC_Spline", 100, 0, 400)
+hInvMassSpline = TH1D("Data-MC_splineMC", "Data-MC_splineMC", 100, 0, 400)
 for iBin in range(100):
     hInvMassSpline.SetBinContent(iBin + 1, hSubSEME_Data.GetBinContent(iBin + 1) - 
                                      splineMCHisto.Eval(hSubSEME_Data.GetBinCenter(iBin + 1)))
 splineMCHisto.Write()
-hInvMassSpline.Write('Data-MC_Spline')
+hInvMassSpline.Write('Data-MC_splineMC')
 
 ############ INCLUDING PYTHIA SIMULATIONS ##############
 inFileXi1530 = TFile("/home/mdicostanzo/an/LPi/Simulation/outputs/NewSimStandalonePythia_MERGED.root")
@@ -149,7 +149,7 @@ thFistPrimYieldXi1530 = 0.027351
 BRrewYieldXi1530 = thFistPrimYieldXi1530 * (1/3)
 hXi1530.Scale(BRrewYieldXi1530/hXi1530.Integral())
 
-inFileLambda1520 = TFile("/home/mdicostanzo/an/LPi/DPG/SimLambda1520_KinemXi1530_42.root")
+inFileLambda1520 = TFile("/home/mdicostanzo/an/LPi/presentations/DPG/SimLambda1520_KinemXi1530_42.root")
 hLambda1520 = ChangeUnits(Load(inFileLambda1520, "3122211_-3122-211_smeared"), 1000)
 thFistPrimYieldLambda1520 = 0.0328154
 BRrewYieldLambda1520 = 0.0328154

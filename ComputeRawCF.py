@@ -131,7 +131,10 @@ for comb in combs + ['p02_13', 'p03_12']:
             norm = hME[comb][region].GetEntries() / hSE[comb][region].GetEntries()
             normrew = hMErew[comb][region].GetEntries() / hSE[comb][region].GetEntries()
         else:
-            log.critical('Normalization method not implemented')
+            lowEdge = hSE[comb][region].FindBin(cfg['norm'][0]*1.0001)
+            uppEdge = hSE[comb][region].FindBin(cfg['norm'][1]*0.9999)
+            norm = hME[comb][region].Integral(lowEdge, uppEdge) / hSE[comb][region].Integral(lowEdge, uppEdge)
+            normrew = hMErew[comb][region].Integral(lowEdge, uppEdge) / hSE[comb][region].Integral(lowEdge, uppEdge)
 
         hSE[comb][region].Sumw2()
         hME[comb][region].Sumw2() # Just to trigger the same draw option as for hSE

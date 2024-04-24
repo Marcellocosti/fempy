@@ -18,6 +18,14 @@
         markerstyle: 4
         normalize: true
         normalizecf: false
+        projX: false    # the projection of the input histogram in the 
+        projY: false    # specified bins startproj and endproj is drawn 
+        startproj: 1
+        endproj: 8
+        drawoptsyst: '5'       # the entry 'drawoptsyst' option triggers the creation of a 
+                               # TGraphAsymmErrors from the input TH1
+        errbarfillstyle: 1001
+        errbarfillalpha: 0.3
 
     opt:
         rangex: [0, 10]

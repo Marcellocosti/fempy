@@ -45,12 +45,10 @@ for plot in cfg:
         if isinstance(inObj, TH2):
             inObj.SetDirectory(0)
             if('projX' in inputCfg):
-                print('Projecting X')
                 inObjProj = inObj.ProjectionX(inputCfg['name'] + "_py_" + str(inputCfg['startproj']) + str(inputCfg['endproj']),
                                               inputCfg['startproj'], inputCfg['endproj'])
                 inObj = inObjProj
             if('projY' in inputCfg):
-                print('Projecting Y')
                 inObjProj = inObj.ProjectionY(inputCfg['name'] + "_py_" + str(inputCfg['startproj']) + str(inputCfg['endproj']),
                                               inputCfg['startproj'], inputCfg['endproj'])
                 inObj = inObjProj
@@ -68,6 +66,18 @@ for plot in cfg:
                 for iBin in range(inObj.GetNbinsX()):
                     inObj.SetBinContent(iBin+1, inObj.GetBinContent(iBin+1) + inputCfg['shift'])
 
+            if('errbarfillstyle' in inputCfg):
+                inObjAsymm = TGraphAsymmErrors(inObj)
+                for iPoint in range(inObj.GetNbinsX()):
+                    errX = inObj.GetBinWidth(iPoint)/4
+                    inObjAsymm.SetPointEXlow(iPoint, errX*2)
+                    inObjAsymm.SetPointEXhigh(iPoint, errX*2)
+                    inObjAsymm.SetPointEXlow(iPoint, errX)
+                    inObjAsymm.SetPointEXhigh(iPoint, errX) 
+                inObj = inObjAsymm
+                inObj.SetFillStyle(inputCfg['errbarfillstyle'])
+                inObj.SetFillColorAlpha(style.GetColor(inputCfg['color']), inputCfg['errbarfillalpha'])
+
         inObj.SetLineColor(style.GetColor(inputCfg['color']))
         inObj.SetMarkerColor(style.GetColor(inputCfg['color']))
         inObj.SetLineWidth(inputCfg.get('thickness', 1))
@@ -75,7 +85,10 @@ for plot in cfg:
         inObj.SetMarkerStyle(inputCfg['markerstyle'])
         inObj.SetMarkerSize(inputCfg['markersize'])
         inObjs.append(inObj)
-        legends.append(inputCfg['legend'])
+        if('legend' in inputCfg):
+            legends.append(inputCfg['legend'])
+        else:
+            legends.append('')
 
     # Define the canvas
     nPanelsX, nPanelsY = fempy.utils.GetNPanels(len(panels))
@@ -109,7 +122,10 @@ for plot in cfg:
 
     for iObj, (inObj, legend) in enumerate(zip(inObjs, legends)):
         if isinstance(inObj, TGraph):
-            inObj.Draw('same p')
+            if('drawoptsyst' in plot['input'][iObj]):
+                inObj.Draw('same' + plot['input'][iObj]['drawoptsyst'])
+            else:
+                inObj.Draw('same p')
         elif isinstance(inObj, TH1):
             inObj.Draw("same pe")
 
@@ -123,7 +139,8 @@ for plot in cfg:
                 legend += f';  #mu={inObj.GetMean():.3f}'
             if plot['opt']['leg']['sigma']:
                 legend += f';  #sigma={inObj.GetStdDev():.3f}'
-        leg.AddEntry(inObj, legend, 'lp')
+        if(legend is not ''):
+            leg.AddEntry(inObj, legend, 'lp')
         
     inputlines = []
     for line in plot['opt']['lines']:

@@ -85,6 +85,18 @@ for plot in cfg:
                 inObj.SetFillStyle(inputCfg['errbarfillstyle'])
                 inObj.SetFillColorAlpha(style.GetColor(inputCfg['color']), inputCfg['errbarfillalpha'])
 
+        inObj.SetLineColor(style.GetColor(inputCfg['color']))
+        inObj.SetMarkerColor(style.GetColor(inputCfg['color']))
+        inObj.SetLineWidth(inputCfg.get('thickness', 1))
+        drawOpts.append(inputCfg.get('drawopt', 'p' if isinstance(inObj, TH1) else 'pe'))
+        inObj.SetMarkerStyle(inputCfg['markerstyle'])
+        inObj.SetMarkerSize(inputCfg['markersize'])
+        inObjs.append(inObj)
+        if('legend' in inputCfg):
+            legends.append(inputCfg['legend'])
+        else:
+            legends.append('')
+
             inObj.SetMarkerStyle(inputCfg['markerstyle'])
             inObj.SetMarkerSize(inputCfg['markersize'])
             inObj.SetMarkerColor(style.GetColor(inputCfg['color']))
@@ -110,7 +122,6 @@ for plot in cfg:
             else:
                 legends.append('')
             
-        print(legends[-1])
     # Define the canvas
     nPanelsX, nPanelsY = fempy.utils.GetNPanels(len(panels))
     cPlot = TCanvas("cPlot", "cPlot", 600*nPanelsX, 600*nPanelsY)

@@ -173,7 +173,7 @@ for plot in cfg:
             if plot['opt']['leg']['mean']:
                 legend += f';  #mu={inObj.GetMean():.3f}'
             if plot['opt']['leg']['sigma']:
-                legend += f';  #sigma={inObj.GetStdDev():.3f}'        
+                legend += f';  #sigma={inObj.GetStdDev():.3f}'
         if(legend != ''):
             leg.AddEntry(inObj, legend, 'lp')
         

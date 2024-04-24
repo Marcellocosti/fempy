@@ -125,9 +125,9 @@ for plot in cfg:
             if('drawoptsyst' in plot['input'][iObj]):
                 inObj.Draw('same' + plot['input'][iObj]['drawoptsyst'])
             else:
-                inObj.Draw('same p')
+                inObj.Draw('same ' + drawOpts[iObj])
         elif isinstance(inObj, TH1):
-            inObj.Draw("same pe")
+            inObj.Draw("same " + drawOpts[iObj])
 
         # Compute statistics for hist in the displayed range
         if isinstance(inObj, TH1):
@@ -198,7 +198,11 @@ for plot in cfg:
                 hRatio = inObj.Clone()
                 hRatio.Rebin(plot['ratio']['rebin'])
                 hRatio.Divide(hDen)
-                hRatio.Draw('same pe')
+                if('drawopt' in plot['ratio']):
+                    hRatio.Draw('same ' + plot['ratio']['drawopt'])
+                else:
+                    hRatio.Draw('same pe')
+
         else:
             log.error('Ratio for type %s is not implemented. Skipping this object', type(inObj))
             continue

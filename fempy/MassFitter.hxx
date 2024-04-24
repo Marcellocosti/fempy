@@ -475,7 +475,7 @@ class MassFitter {
             canvaLine->SetLineStyle(1);
             canvaLine->SetLineWidth(3);
             canvaLine->SetLineColor(4);
-
+            cout << "Drawing prefit function" << endl;
             double lowBinContent = fHist->GetBinContent(fHist->FindBin(fPrefitRangeMin));
             canvaLine->DrawLine(fPrefitRangeMin, pad->GetUymin() * padCoord + lowBinContent * lowMult,
                                 fPrefitRangeMin, pad->GetUymax() * 0.5 * padCoord + lowBinContent * uppMult);
@@ -498,27 +498,27 @@ class MassFitter {
             }
         }
 
-        // this->fBkg->SetNpx(300);
-        // this->fBkg->SetLineColor(kGray + 2);
-        // this->fBkg->Draw("same");
+        this->fBkg->SetNpx(300);
+        this->fBkg->SetLineColor(kGray + 2);
+        this->fBkg->Draw("same");
 
-        // this->fSgn->SetNpx(300);
-        // this->fSgn->SetLineColor(kBlue + 2);
-        // this->fSgn->Draw("same");
+        this->fSgn->SetNpx(300);
+        this->fSgn->SetLineColor(kBlue + 2);
+        this->fSgn->Draw("same");
 
         if (this->fSgnFuncName == "hat" || this->fSgnFuncName == "doublegaus") {
-            // this->fHatThin->SetLineColor(kMagenta + 3);
-            // this->fHatThin->SetNpx(300);
-            // this->fHatThin->Draw("same");
+            this->fHatThin->SetLineColor(kMagenta + 3);
+            this->fHatThin->SetNpx(300);
+            this->fHatThin->Draw("same");
 
-            // this->fHatWide->SetNpx(300);
-            // this->fHatWide->SetLineColor(kAzure + 2);
-            // this->fHatWide->Draw("same");
+            this->fHatWide->SetNpx(300);
+            this->fHatWide->SetLineColor(kAzure + 2);
+            this->fHatWide->Draw("same");
         } 
 
-        // fPrefit->SetLineStyle(9);
-        // fPrefit->SetLineColor(kGray + 2);
-        // fPrefit->Draw("same");
+        fPrefit->SetLineStyle(9);
+        fPrefit->SetLineColor(kGray + 2);
+        fPrefit->Draw("same");
 
         fFit->SetLineColor(kRed);
         fFit->SetLineWidth(3);

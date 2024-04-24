@@ -3,7 +3,7 @@ import os
 import yaml
 from rich import print
 
-from ROOT import TFile, TCanvas, TLegend, TLine, TH1, TGraph, TGraphErrors, TGraphAsymmErrors, TH1D, gStyle, TLatex
+from ROOT import TFile, TCanvas, TLegend, TLine, TH1, TGraph, TGraphErrors, TGraphAsymmErrors, TH1D, gStyle, TLatex, TH2
 
 import fempy
 from fempy import logger as log
@@ -41,7 +41,21 @@ for plot in cfg:
         inFile = TFile(inputCfg['file'])
 
         inObj = Load(inFile, inputCfg['name'])
-
+        
+        if isinstance(inObj, TH2):
+            inObj.SetDirectory(0)
+            if('projX' in inputCfg):
+                print('Projecting X')
+                inObjProj = inObj.ProjectionX(inputCfg['name'] + "_py_" + str(inputCfg['startproj']) + str(inputCfg['endproj']),
+                                              inputCfg['startproj'], inputCfg['endproj'])
+                inObj = inObjProj
+            if('projY' in inputCfg):
+                print('Projecting Y')
+                inObjProj = inObj.ProjectionY(inputCfg['name'] + "_py_" + str(inputCfg['startproj']) + str(inputCfg['endproj']),
+                                              inputCfg['startproj'], inputCfg['endproj'])
+                inObj = inObjProj
+            inObj.Rebin(inputCfg['rebin'])
+        
         if isinstance(inObj, TH1):
             inObj.SetDirectory(0)
             inObj.Rebin(inputCfg['rebin'])

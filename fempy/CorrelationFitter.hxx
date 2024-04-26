@@ -255,11 +255,6 @@ class CorrelationFitter {
         //                this->fFitHist->GetTitle(), this->fFitHist->GetXaxis()->GetTitle(),
         //                this->fFitHist->GetYaxis()->GetTitle()));
         
-        this->fFit->SetNpx(300);
-        this->fFit->SetLineColor(kRed);
-        this->fFit->SetLineWidth(linesThickness);
-        this->fFit->DrawF1(fFitRangeMin+1,1000,"same");
-        pad->Update();
         
         cout << "Drawingciao" << endl;
         std::vector<Color_t> colors = {kMagenta + 3, kAzure + 2, kGreen, kBlue + 2, kOrange, kCyan, kBlack, kGreen+2};
@@ -283,9 +278,15 @@ class CorrelationFitter {
             cout << endl;
         }
     
+        this->fFit->SetNpx(300);
+        this->fFit->SetLineColor(kRed);
+        this->fFit->SetLineWidth(linesThickness);
+        this->fFit->DrawF1(fFitRangeMin+1,1000,"same");
+        pad->Update();
+
         cout << "Drawing" << endl;
         fFitHist->GetYaxis()->SetRangeUser(yMinDraw, yMaxDraw); 
-        fFitHist->SetMarkerSize(0.3);
+        fFitHist->SetMarkerSize(0.1);
         fFitHist->SetMarkerStyle(20);
         fFitHist->SetMarkerColor(kBlack);
         fFitHist->SetLineColor(kBlack);
@@ -298,6 +299,7 @@ class CorrelationFitter {
         legend->Draw("same");
         pad->Update();
         cout << "Drawn!" << endl;
+
     }
 
     void Debug() {

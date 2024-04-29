@@ -26,6 +26,7 @@ double PowerLaw(double *x, double *par);
 double FlatPol3(double *x, double *par);
 double FlatPol3PowLaw(double *x, double *par);
 double Pol3PowLaw(double *x, double *par);
+double WeightedPol3andPol2(double *x, double *par);
 double SillKStar(double *x, double *par);
 
 std::map<TString, std::tuple<double (*)(double *x, double *par), int>> functions = 
@@ -46,6 +47,7 @@ std::map<TString, std::tuple<double (*)(double *x, double *par), int>> functions
     {"flatpol3", {FlatPol3, 5}},
     {"flatpol3powlaw", {FlatPol3PowLaw, 6}},
     {"pol3powlaw", {Pol3PowLaw, 5}},
+    {"weightedpol3andpol2", {WeightedPol3andPol2, 12}},
     {"sillkstar", {SillKStar, 3}}};
 
 
@@ -71,6 +73,10 @@ double FlatPol3PowLaw(double *x, double *par) {
 
 double Pol3PowLaw(double *x, double *par) { 
     return Pol3(x, par) * pow(x[0], par[4]); 
+}
+
+double WeightedPol3andPol2(double *x, double *par) {
+    return par[0] * Pol3(x, &par[1]) + (1 - par[0]) * Pol3(x, &par[5]) + Pol2(x, &par[9]); 
 }
 
 double PowerLaw(double *x, double *par) { 

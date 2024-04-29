@@ -78,7 +78,7 @@ class CorrelationFitter {
             this->fFitFuncComps.push_back(name);
             // -1 needed because pars includes the norm of the term
             if(pars.size()-1 != std::get<1>(functions[name])) {
-                printf("Error: wrong number of parameters for function '%s'!", name.Data());
+                printf("Error: wrong number of parameters for function '%s'!\n", name.Data());
                 exit(1);                
             } else {
                 this->fNPars.push_back(pars.size());
@@ -113,12 +113,17 @@ class CorrelationFitter {
         }
     }
 
-    TF1 *GetComponent(int icomp, int ibaseline=-1) {
+    TF1 *GetComponent(int icomp, int ibaseline=-1, bool onbaseline=true) {
         if(!this->fFit) {
             throw std::invalid_argument("Fit not performed, component cannot be evaluated!");
         }
-        
-        if(ibaseline != -1) {
+        if(ibaseline != -1 && onbaseline) {
+            // cout << "Evaluating with baseline" << endl;
+            // cout << this->fFitFuncComps[icomp] << endl;
+            // cout << "Evaluating with baseline" << endl;
+            // cout << this->fFitFuncEval[icomp]->Eval(2) << endl;
+            // cout << this->fNorms[ibaseline] << endl;
+            // cout << this->fFitFuncEval[ibaseline]->Eval(2) << endl;
             TF1 *compWithoutNormAndBaseline = new TF1(this->fFitFuncComps[icomp],
                 [&, this, icomp, ibaseline](double *x, double *pars) {
                    return ( this->fFitFuncEval[icomp]->Eval(x[0]) - 
@@ -127,6 +132,8 @@ class CorrelationFitter {
             }, this->fFitRangeMin, this->fFitRangeMax, 0);
             return compWithoutNormAndBaseline;
         } else {
+            // cout << "Evaluating without baseline" << endl;
+            // cout << icomp << " " << this->fFitFuncEval[icomp]->Eval(2) << this->fNorms[icomp] << endl;
             TF1 *compWithoutNorm = new TF1(this->fFitFuncComps[icomp],
                 [&, this, icomp](double *x, double *pars) {
                    return this->fFitFuncEval[icomp]->Eval(x[0]) / this->fNorms[icomp];  
@@ -221,7 +228,7 @@ class CorrelationFitter {
                  << " " << lowParLimit << " " << uppParLimit << endl;
         }
 
-        cout << "Bin content: " << fFitHist->GetBinContent(1) << endl;
+        // cout << "Bin content: " << fFitHist->GetBinContent(1) << endl;
         TFitResultPtr fitResults = fFitHist->Fit(this->fFit, "SMR+0", "");
         return fitResults;
     }
@@ -229,6 +236,8 @@ class CorrelationFitter {
     TF1 *GetFitFunction() {
         return this->fFit;
     } 
+
+    double GetChi2Ndf() { return fFit->GetChisquare() / fFit->GetNDF(); }
 
     /*
     Define a canvas before calling this function and pass gPad as TVirtualPad
@@ -238,53 +247,47 @@ class CorrelationFitter {
               double lowRangeUser=0.0, double uppRangeUser=1.05, std::string title=";k* (MeV/c);C(k*)") {
 
         EvaluateComponents(basIdx, onBaseline, addComps); 
-        cout << "Drawing" << endl;
         pad->cd();
         double yMinDraw = lowRangeUser;
         double yMaxDraw = uppRangeUser + fFitHist->GetMaximum();
         
-        cout << "Drawing" << endl;
         TLegend *legend = new TLegend(legCoords[0], legCoords[1], legCoords[2], legCoords[3]);
         legend->AddEntry(this->fFitHist, legLabels[0].Data(), "lp");
         legend->AddEntry(this->fFit, legLabels[1].Data(), "l");
 
-        cout << "Drawing" << endl;
         //gPad->DrawFrame(fFitRangeMin, yMinDraw, fFitRangeMax, yMaxDraw, title.data());
-        gPad->DrawFrame(fFitRangeMin, yMinDraw, 2000, yMaxDraw, title.data());
+        gPad->DrawFrame(1, yMinDraw, fFitRangeMax, yMaxDraw, title.data());
+        //gPad->DrawFrame(fFitRangeMin, yMinDraw, 2000, yMaxDraw, title.data());
         //gPad->DrawFrame(fFitRangeMin, yMinDraw, 2000, yMaxDraw, Form("%s;%s;%s", 
         //                this->fFitHist->GetTitle(), this->fFitHist->GetXaxis()->GetTitle(),
         //                this->fFitHist->GetYaxis()->GetTitle()));
         
-        
-        cout << "Drawingciao" << endl;
+        if(basIdx == -1){
+            std::cerr << "Warning: Baseline is not fixed!" << std::endl;
+        }
         std::vector<Color_t> colors = {kMagenta + 3, kAzure + 2, kGreen, kBlue + 2, kOrange, kCyan, kBlack, kGreen+2};
         for(int iFuncEval=0; iFuncEval<fFitFuncEval.size(); iFuncEval++) {
-            cout << "Ciao1" << endl;
+            // cout << "Iteration: " << iFuncEval << " " << fFitFuncEval.size() << endl;
             this->fFitFuncEval[iFuncEval]->SetNpx(300);
-            cout << "Ciao2" << endl;
             this->fFitFuncEval[iFuncEval]->SetLineColor(colors[iFuncEval]); //.data());
-            cout << "Ciao3" << endl;
             this->fFitFuncEval[iFuncEval]->SetLineWidth(linesThickness);
-            cout << "Ciao4" << endl;
-            this->fFitFuncEval[iFuncEval]->DrawF1(fFitRangeMin+1,1000,"same");
+            // this->fFitFuncEval[iFuncEval]->DrawF1(fFitRangeMin+1,fFitRangeMax,"same");
+            this->fFitFuncEval[iFuncEval]->DrawF1(1,fFitRangeMax,"same");
             this->fFitFuncEval[iFuncEval]->Eval(100);
-            cout << "Ciao5" << endl;
             pad->Update();
-            cout << "Ciao6" << endl;
             if(legLabels[iFuncEval+2].Contains("lambda_flat")) continue;
-            cout << "Ciao7" << endl;
             legend->AddEntry(this->fFitFuncEval[iFuncEval], legLabels[iFuncEval+2].Data(), "l");
-            cout << "Ciao8" << endl;
-            cout << endl;
         }
+        // cout << "Drawing" << endl;
     
         this->fFit->SetNpx(300);
         this->fFit->SetLineColor(kRed);
         this->fFit->SetLineWidth(linesThickness);
-        this->fFit->DrawF1(fFitRangeMin+1,1000,"same");
+        //this->fFit->DrawF1(fFitRangeMin+1,fFitRangeMax,"same");
+        this->fFit->DrawF1(1,fFitRangeMax,"same");
         pad->Update();
 
-        cout << "Drawing" << endl;
+        // cout << "Drawing" << endl;
         fFitHist->GetYaxis()->SetRangeUser(yMinDraw, yMaxDraw); 
         fFitHist->SetMarkerSize(0.1);
         fFitHist->SetMarkerStyle(20);

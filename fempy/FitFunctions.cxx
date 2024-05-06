@@ -9,6 +9,7 @@
 #include "TMath.h"
 #include "gsl/gsl_sf_dawson.h"
 
+double GlobNorm(double *x, double *par);
 double Pol0(double *x, double *par);
 double Pol1(double *x, double *par);
 double Pol2(double *x, double *par);
@@ -26,6 +27,7 @@ double PowerLaw(double *x, double *par);
 double FlatPol3(double *x, double *par);
 double FlatPol3PowLaw(double *x, double *par);
 double Pol3PowLaw(double *x, double *par);
+double Pol4PowLaw(double *x, double *par);
 double WeightedPol3andPol3(double *x, double *par);
 double WeightedPol3andPol3Powlaw(double *x, double *par);
 double WeightedPol3andPol2(double *x, double *par);
@@ -33,7 +35,8 @@ double WeightedPol3Pol3powlawAndPol2(double *x, double *par);
 double SillKStar(double *x, double *par);
 
 std::map<TString, std::tuple<double (*)(double *x, double *par), int>> functions = 
-   {{"pol0", {Pol0, 1}},
+   {{"globnorm", {GlobNorm, 0}},
+    {"pol0", {Pol0, 1}},
     {"pol1", {Pol1, 2}},
     {"pol2", {Pol2, 3}},
     {"pol3", {Pol3, 4}},
@@ -50,12 +53,15 @@ std::map<TString, std::tuple<double (*)(double *x, double *par), int>> functions
     {"flatpol3", {FlatPol3, 5}},
     {"flatpol3powlaw", {FlatPol3PowLaw, 6}},
     {"pol3powlaw", {Pol3PowLaw, 5}},
+    {"pol4powlaw", {Pol4PowLaw, 6}},
     {"weighted_pol3_and_pol3", {WeightedPol3andPol3, 9}},
     {"weighted_pol3_and_pol3powlaw", {WeightedPol3andPol3Powlaw, 10}},
     {"weightedpol3andpol2", {WeightedPol3andPol2, 12}},
     {"weighted_pol3_pol3powlaw_and_pol2", {WeightedPol3Pol3powlawAndPol2, 13}},
     {"sillkstar", {SillKStar, 3}}};
 
+
+double GlobNorm(double *x, double *par) { return 1.; }
 
 double Pol0(double *x, double *par) { return par[0]; }
 
@@ -79,6 +85,10 @@ double FlatPol3PowLaw(double *x, double *par) {
 
 double Pol3PowLaw(double *x, double *par) { 
     return Pol3(x, par) * pow(x[0], par[4]); 
+}
+
+double Pol4PowLaw(double *x, double *par) { 
+    return Pol4(x, par) * pow(x[0], par[5]); 
 }
 
 double WeightedPol3andPol3(double *x, double *par) {

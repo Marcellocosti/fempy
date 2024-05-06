@@ -87,6 +87,7 @@ for iFit, fitcf in enumerate(cfg['fitcfs']):
     linesThickness = fitcf['linethick']
     compsToFile = []
     onBaseline = []
+    shifts = []
     legLabels = []
     legLabels.append(fitcf['datalabel'])
     legLabels.append(fitcf['fitfunclabel'])
@@ -101,7 +102,11 @@ for iFit, fitcf in enumerate(cfg['fitcfs']):
         
         legLabels.append(term['legentry'])
         onBaseline.append(term['onbaseline'])
-
+        if('shift' in term):
+            shifts.append(term['shift'])
+        else: 
+            shifts.append(0.)
+        
         if('template' in term):
             histoFile = TFile(term['histofile'])
             splinedHisto = ChangeUnits(Load(histoFile, term['histopath']), 1000)
@@ -146,28 +151,35 @@ for iFit, fitcf in enumerate(cfg['fitcfs']):
                     initPars.append((key, term['params'][key][0], term['params'][key][1], 
                                      term['params'][key][2]))
 
-            print(initPars)
             modelFitters[-1].Add(term['func'], initPars, term['addmode'])
                 
     # perform the fit and save the result
+    if('globnorm' in fitcf):
+        modelFitters[-1].AddGlobNorm('globnorm', fitcf['globnorm'][0], fitcf['globnorm'][1], fitcf['globnorm'][2])    
     oFile.cd(fitcf['fitname'])
     modelFitters[-1].BuildFitFunction()
     oFile.cd(fitcf['fitname'])
     modelFitters[-1].Fit()
     hChi2DOF = TH1D('hChi2DOF', 'hChi2DOF', 1, 0, 1)
     hChi2DOF.Fill(0.5, modelFitters[-1].GetChi2Ndf())
+    print('Chi2 / DOF: ' + str(modelFitters[-1].GetChi2Ndf()))
+    print('\n\n')
     cFit = TCanvas('cFit', '', 600, 600)
     if('drawsumcomps' in fitcf):
         modelFitters[-1].Draw(cFit, legLabels, fitcf['legcoords'], onBaseline,
                               linesThickness, baselineIdx, fitcf['drawsumcomps'])
     else:
-        modelFitters[-1].Draw(cFit, legLabels, fitcf['legcoords'], onBaseline,
-                              linesThickness, baselineIdx)
-    modelFitters[-1].Debug()
+        modelFitters[-1].Draw(cFit, legLabels, fitcf['legcoords'], linesThickness,
+                              onBaseline, shifts, baselineIdx)
+    if('debug' in fitcf):
+        modelFitters[-1].Debug()
         
     cFit.Write()
     fitHisto.Write()
     fitFunction = modelFitters[-1].GetFitFunction()
+    modelFitters[-1].SaveFitPars().Write()
+    modelFitters[-1].SaveScatPars().Write()
+    modelFitters[-1].SaveFreeFixPars().Write()
     fitFunction.Write()
     hChi2DOF.Write()
     for iCompToFile, compToFile in enumerate(compsToFile):

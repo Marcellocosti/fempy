@@ -265,11 +265,20 @@ class CorrelationFitter {
             throw std::invalid_argument("Fit not performed, pulls cannot be calculated!");
         }
     
-        TH1D *histoPulls = new TH1D("hPull", "hPull", this->fFitHist->GetNbinsX(), 0, this->fFitHist->GetBinCenter(this->fFitHist->GetNbinsX()+1));
+        std::vector<double> pulls;
         for(int iBin=0; iBin<this->fFitHist->GetNbinsX(); iBin++) {    
-            histoPulls->SetBinContent(iBin+1, (this->fFitHist->GetBinContent(iBin+1) - this->fFit->Eval(this->fFitHist->GetBinCenter(iBin+1))) /         
-                                               this->fFitHist->GetBinError(iBin+1));
+            if(this->fFitHist->GetBinCenter(iBin+1) >= this->fFitRangeMin &&
+               this->fFitHist->GetBinCenter(iBin+1) <= this->fFitRangeMax) {
+                    pulls.push_back( (this->fFitHist->GetBinContent(iBin+1) - this->fFit->Eval(this->fFitHist->GetBinCenter(iBin+1))) /         
+                                      this->fFitHist->GetBinError(iBin+1));
+            }
         }
+
+        TH1D *histoPulls = new TH1D("hPull", "hPull", pulls.size(), this->fFitRangeMin, this->fFitRangeMax);
+        for(int iBin=0; iBin<this->fFitHist->GetNbinsX(); iBin++) {    
+            histoPulls->SetBinContent(iBin+1, pulls[iBin]);         
+        }
+        
         return histoPulls;
     }
 

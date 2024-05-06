@@ -97,8 +97,6 @@ for iFit, fitcf in enumerate(cfg['fitcfs']):
         if('isbaseline' in term):
             if(term['isbaseline']):
                 baselineIdx = iTerm
-        if('savetofile' in term):
-            compsToFile.append(iTerm)
         
         legLabels.append(term['legentry'])
         onBaseline.append(term['onbaseline'])
@@ -178,17 +176,15 @@ for iFit, fitcf in enumerate(cfg['fitcfs']):
     fitHisto.Write()
     fitFunction = modelFitters[-1].GetFitFunction()
     modelFitters[-1].SaveFitPars().Write()
-    modelFitters[-1].SaveScatPars().Write()
     modelFitters[-1].SaveFreeFixPars().Write()
+    modelFitters[-1].PullDistribution().Write()
+    if('isfitcf' in fitcf):
+        modelFitters[-1].SaveScatPars().Write()
     fitFunction.Write()
     hChi2DOF.Write()
-    for iCompToFile, compToFile in enumerate(compsToFile):
-        if('spline' not in fitcf['model'][iTerm] and 'template' not in fitcf['model'][iTerm]):
-            modelFitters[-1].GetComponent(compToFile, baselineIdx, fitcf['model'][iTerm]['onbaseline']).Write(term['func'])
-        modelFitters[-1].GetComponentPars(compToFile).Write('h' + fitcf['model'][compToFile]['func'][0].upper() + 
-                                                            fitcf['model'][compToFile]['func'][1:])
-    for iPar in range(fitFunction.GetNpar()):
-        cfg[f'Fit n°{iFit}, par {iPar}'] = fitFunction.GetParName(iPar) + ", " + str(fitFunction.GetParameter(iPar))
+
+    #for iPar in range(fitFunction.GetNpar()):
+    #    cfg[f'Fit n°{iFit}, par {iPar}'] = fitFunction.GetParName(iPar) + ", " + str(fitFunction.GetParameter(iPar))
     #pdfFileName = fitcf['fitname'] + cfg["suffix"] + ".pdf"
     #pdfFilePath = os.path.join(cfg['odir'], pdfFileName) 
     #cFit.SaveAs(pdfFilePath)

@@ -184,17 +184,24 @@ class CorrelationFitter {
             throw std::invalid_argument("Fit not performed, component cannot be evaluated!");
         }
         
-        TH1D *histoFreeFixPars = new TH1D("hFreeFixPars", "hFreeFixPars", this->fFit->GetNpar(), 0, this->fFit->GetNpar());
+        TH1D *histoFreeFixPars = new TH1D("hFreeFixPars", "hFreeFixPars", this->fFit->GetNpar()+2, 0, this->fFit->GetNpar()+2);
+        
+        histoFreeFixPars->SetBinContent(1, this->fFitRangeMin);
+        histoFreeFixPars->GetXaxis()->SetBinLabel(1, "Low fit edge");
+        
+        histoFreeFixPars->SetBinContent(2, this->fFitRangeMax);
+        histoFreeFixPars->GetXaxis()->SetBinLabel(2, "Upp fit edge");
+
         double lowParEdge = 0.;
         double uppParEdge = 0.;
         for(int iPar=0; iPar<this->fFit->GetNpar(); iPar++) {
             this->fFit->GetParLimits(iPar, lowParEdge, uppParEdge);
             if(lowParEdge >= uppParEdge) {
-                histoFreeFixPars->SetBinContent(iPar+1, -1);
+                histoFreeFixPars->SetBinContent(iPar+3, -1);
             } else {
-                histoFreeFixPars->SetBinContent(iPar+1, 1);
+                histoFreeFixPars->SetBinContent(iPar+3, 1);
             }
-            histoFreeFixPars->GetXaxis()->SetBinLabel(iPar+1, this->fFit->GetParName(iPar));
+            histoFreeFixPars->GetXaxis()->SetBinLabel(iPar+3, this->fFit->GetParName(iPar));
         }
 
         histoFreeFixPars->SetStats(0);
@@ -253,6 +260,19 @@ class CorrelationFitter {
         return histoScatPars;
     }
     
+    TH1D *PullDistribution() {
+        if(!this->fFit) {
+            throw std::invalid_argument("Fit not performed, pulls cannot be calculated!");
+        }
+    
+        TH1D *histoPulls = new TH1D("hPull", "hPull", this->fFitHist->GetNbinsX(), 0, this->fFitHist->GetBinCenter(this->fFitHist->GetNbinsX()+1));
+        for(int iBin=0; iBin<this->fFitHist->GetNbinsX(); iBin++) {    
+            histoPulls->SetBinContent(iBin+1, (this->fFitHist->GetBinContent(iBin+1) - this->fFit->Eval(this->fFitHist->GetBinCenter(iBin+1))) /         
+                                               this->fFitHist->GetBinError(iBin+1));
+        }
+        return histoPulls;
+    }
+
     void BuildFitFunction() {
         cout << "----------- Building the fit function -----------" << endl;
         // Build the fit function
@@ -366,14 +386,15 @@ class CorrelationFitter {
         cout << "Number of functions to evaluate " << fFitFuncEval.size() << endl; 
         cout << "Number of legend entries " << legLabels.size() << endl; 
         for(int iFuncEval=0; iFuncEval<fFitFuncEval.size(); iFuncEval++) {
-            cout << "Iteration: " << iFuncEval << " " << fFitFuncEval.size() << endl;
+            // cout << "Iteration: " << iFuncEval << " " << fFitFuncEval.size() << endl;
             this->fFitFuncEval[iFuncEval]->SetNpx(300);
             this->fFitFuncEval[iFuncEval]->SetLineColor(colors[iFuncEval]); //.data());
             this->fFitFuncEval[iFuncEval]->SetLineWidth(linesThickness);
             this->fFitFuncEval[iFuncEval]->DrawF1(fFitRangeMin+1,fFitRangeMax,"same");
             this->fFitFuncEval[iFuncEval]->DrawF1(1,fFitRangeMax,"same");
             cout << fFitFuncComps[iFuncEval] << endl; 
-            if(fFitFuncComps[iFuncEval].Contains("gaus")) {
+            if(fFitFuncComps[iFuncEval] == "gaus") {
+                cout << "Ciao gaus " << fFitFuncComps[iFuncEval] << endl;
                 gaussians.push_back(new TF1(Form("Gaus%i", iFuncEval),
                     [&, this, iFuncEval](double *x, double *pars) {
                     return this->fFitFuncEval[iFuncEval]->Eval(x[0]);

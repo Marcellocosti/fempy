@@ -274,11 +274,11 @@ class CorrelationFitter {
             }
         }
 
-        TH1D *histoPulls = new TH1D("hPull", "hPull", pulls.size(), this->fFitRangeMin, this->fFitRangeMax);
+        TH1D *histoPulls = new TH1D("hPulls", "hPulls", pulls.size(), this->fFitRangeMin, this->fFitRangeMax);
         for(int iBin=0; iBin<this->fFitHist->GetNbinsX(); iBin++) {    
             histoPulls->SetBinContent(iBin+1, pulls[iBin]);         
         }
-        
+
         return histoPulls;
     }
 

@@ -50,6 +50,28 @@ class CorrelationFitter {
         pad->Update();
     }
 
+    void DrawSpline(TVirtualPad *pad, TGraph* graph, 
+                    std::string name=";k* (MeV/c);Counts") {
+        
+        pad->cd();
+        double yMaxDraw = TMath::MaxElement(graph->GetN(), graph->GetY())*1.2; 
+        double yMinDraw = TMath::MinElement(graph->GetN(), graph->GetY())*0.8; 
+        gPad->DrawFrame(fFitRangeMin, yMinDraw, fFitRangeMax, yMaxDraw, name.data());
+
+        TSpline3* sp3graph = new TSpline3(graph->GetTitle(), graph);
+        sp3graph->SetNpx(300);
+        sp3graph->SetLineColor(kRed);
+        sp3graph->Draw("same");
+        
+        graph->SetMarkerSize(0.3);
+        graph->SetMarkerStyle(20);
+        graph->SetMarkerColor(kBlack);
+        graph->SetLineColor(kBlack);
+        graph->SetLineWidth(3);
+        graph->Draw("same pe");
+        pad->Update();
+    }
+
     /*
     Add a term to the CF model. Available options:
         - pol0
@@ -106,6 +128,12 @@ class CorrelationFitter {
         
         this->Add(name, sp3, pars, addmode);
     }
+
+    void Add(TString name, TGraph* graph, std::vector<std::tuple<std::string, double, double, double>> pars, std::string addmode) {
+        TSpline3* sp3 = new TSpline3(graph->GetTitle(), graph);
+        this->Add(name, sp3, pars, addmode);
+    }
+
     void Add(TString name, TSpline3* spline, std::vector<std::tuple<std::string, double, double, double>> pars, std::string addmode) {
         cout << "Spline eval first bin: " << spline->Eval(2) << endl;
         cout << "Spline eval second bin: " << spline->Eval(6) << endl;

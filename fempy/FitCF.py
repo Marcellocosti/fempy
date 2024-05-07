@@ -11,7 +11,7 @@ import os
 import argparse
 import yaml
 
-from ROOT import TFile, TCanvas, gInterpreter, TH1D
+from ROOT import TFile, TCanvas, gInterpreter, TH1, TH1D
 gInterpreter.ProcessLine(f'#include "{os.environ.get("FEMPY")}fempy/CorrelationFitter.hxx"')
 from ROOT import CorrelationFitter
 
@@ -106,17 +106,19 @@ for iFit, fitcf in enumerate(cfg['fitcfs']):
             shifts.append(0.)
         
         if('template' in term):
-            histoFile = TFile(term['histofile'])
-            splinedHisto = ChangeUnits(Load(histoFile, term['histopath']), 1000)
-            if('rebin' in term):
-                splinedHisto.Rebin(term['rebin'])
+            templFile = TFile(term['templfile'])
+            splinedTempl = Load(templFile, term['templpath'])
+            if(isinstance(splinedTempl, TH1)):
+                splinedTempl = ChangeUnits(splinedTempl, 1000)
+                if('rebin' in term):
+                    splinedTempl.Rebin(term['rebin'])
             initPars = [(key, term['params'][key][0], term['params'][key][1], 
-                         term['params'][key][2]) for key in term['params']]
-            modelFitters[-1].Add(term['template'], splinedHisto, initPars, term['addmode'])
-            cSplinedHisto = TCanvas(f'c{term["template"]}', '', 600, 600)
-            modelFitters[-1].DrawSpline(cSplinedHisto, splinedHisto)
+                         term['params'][key][2]) for key in term['params']]    
+            modelFitters[-1].Add(term['template'], splinedTempl, initPars, term['addmode'])
+            cSplinedTempl = TCanvas(f'c{term["template"]}', '', 600, 600)
+            modelFitters[-1].DrawSpline(cSplinedTempl, splinedTempl)
             oFile.cd(fitcf['fitname'])
-            cSplinedHisto.Write()
+            cSplinedTempl.Write()
         
         elif('spline' in term):
             histoFile = TFile(term['histofile'])

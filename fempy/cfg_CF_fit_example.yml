@@ -31,8 +31,8 @@ fitcfs:
         onbaseline: false                       # option to draw this component adding the baseline or not 
         savetofile: true                        # save this function to file
     -   template: name_of_spline
-        histofile: /file/of/histo/to/be/splined.root
-        histopath: /internal/path/of/histo/to/be/splined
+        templfile: /file/of/histo/to/be/splined.root
+        templpath: /internal/path/of/histo/to/be/splined
         rebin: 2                                # rebin the histo
         legentry: "label"
         linecolor: EColor.kMagenta
@@ -43,8 +43,8 @@ fitcfs:
         addmode: '+'
         onbaseline: true
     -   spline: spline3             # name of spline function to be considered
-        histofile: /path/of/file/of/interest.root
-        histopath: 'internal/path/of/histo'
+        templfile: /path/of/file/of/interest.root
+        templpath: 'internal/path/of/histo'
         changeunits: 1000           # optional, to change the histo units
         rebin: 2
         legentry: 'spline'

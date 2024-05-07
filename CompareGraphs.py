@@ -3,11 +3,12 @@ import os
 import yaml
 from rich import print
 
-from ROOT import TFile, TCanvas, TLegend, TLine, TH1, TGraph, TGraphErrors, TGraphAsymmErrors, TH1D, gStyle, TLatex, TH2
+from ROOT import TFile, TCanvas, TLegend, TLine, TH1, TGraph, TGraphErrors, TGraphAsymmErrors, TH1D, gStyle, TLatex, TH2, TF1
 
 import fempy
 from fempy import logger as log
 from fempy.utils.format import TranslateToLatex
+from fempy.utils.analysis import ChangeUnits
 from fempy.utils.io import Load
 from fempy.utils import style
 
@@ -39,8 +40,10 @@ for plot in cfg:
     drawOpts = []
     for inputCfg in plot["input"]:
         inFile = TFile(inputCfg['file'])
-
         inObj = Load(inFile, inputCfg['name'])
+
+        if 'changeunits' in inputCfg and isinstance(inObj, TH1):
+            inObj = ChangeUnits(inObj, inputCfg['changeunits'])
         
         if isinstance(inObj, TH2):
             inObj.SetDirectory(0)
@@ -57,6 +60,10 @@ for plot in cfg:
         if isinstance(inObj, TH1):
             inObj.SetDirectory(0)
             inObj.Rebin(inputCfg['rebin'])
+
+            if not inObjs:
+                drawTF1low = inObj.GetBinCenter(1)
+                drawTF1upp = inObj.GetBinCenter(inObj.GetNbinsX())
 
             if inputCfg['normalize']:
                 inObj.Scale(1./inObj.Integral())
@@ -78,12 +85,16 @@ for plot in cfg:
                 inObj.SetFillStyle(inputCfg['errbarfillstyle'])
                 inObj.SetFillColorAlpha(style.GetColor(inputCfg['color']), inputCfg['errbarfillalpha'])
 
-        inObj.SetLineColor(style.GetColor(inputCfg['color']))
-        inObj.SetMarkerColor(style.GetColor(inputCfg['color']))
-        inObj.SetLineWidth(inputCfg.get('thickness', 1))
+            inObj.SetMarkerStyle(inputCfg['markerstyle'])
+            inObj.SetMarkerSize(inputCfg['markersize'])
+            inObj.SetMarkerColor(style.GetColor(inputCfg['color']))
+        
+        if isinstance(inObj, TF1):
+            print('Loading TF1!')
+
         drawOpts.append(inputCfg.get('drawopt', 'p' if isinstance(inObj, TH1) else 'pe'))
-        inObj.SetMarkerStyle(inputCfg['markerstyle'])
-        inObj.SetMarkerSize(inputCfg['markersize'])
+        inObj.SetLineColor(style.GetColor(inputCfg['color']))
+        inObj.SetLineWidth(inputCfg.get('thickness', 1))
         inObjs.append(inObj)
         if('legend' in inputCfg):
             legends.append(inputCfg['legend'])
@@ -126,6 +137,9 @@ for plot in cfg:
                 inObj.Draw('same' + plot['input'][iObj]['drawoptsyst'])
             else:
                 inObj.Draw('same ' + drawOpts[iObj])
+
+        if isinstance(inObj, TF1):
+            inObj.DrawF1(fx1, fx2, "same")
         elif isinstance(inObj, TH1):
             inObj.Draw("same " + drawOpts[iObj])
 
@@ -138,7 +152,7 @@ for plot in cfg:
             if plot['opt']['leg']['mean']:
                 legend += f';  #mu={inObj.GetMean():.3f}'
             if plot['opt']['leg']['sigma']:
-                legend += f';  #sigma={inObj.GetStdDev():.3f}'
+                legend += f';  #sigma={inObj.GetStdDev():.3f}'        
         if(legend != ''):
             leg.AddEntry(inObj, legend, 'lp')
         

@@ -85,12 +85,16 @@ for plot in cfg:
                 inObj.SetFillStyle(inputCfg['errbarfillstyle'])
                 inObj.SetFillColorAlpha(style.GetColor(inputCfg['color']), inputCfg['errbarfillalpha'])
 
-        inObj.SetLineColor(style.GetColor(inputCfg['color']))
-        inObj.SetMarkerColor(style.GetColor(inputCfg['color']))
-        inObj.SetLineWidth(inputCfg.get('thickness', 1))
+            inObj.SetMarkerStyle(inputCfg['markerstyle'])
+            inObj.SetMarkerSize(inputCfg['markersize'])
+            inObj.SetMarkerColor(style.GetColor(inputCfg['color']))
+        
+        if isinstance(inObj, TF1):
+            print('Loading TF1!')
+
         drawOpts.append(inputCfg.get('drawopt', 'p' if isinstance(inObj, TH1) else 'pe'))
-        inObj.SetMarkerStyle(inputCfg['markerstyle'])
-        inObj.SetMarkerSize(inputCfg['markersize'])
+        inObj.SetLineColor(style.GetColor(inputCfg['color']))
+        inObj.SetLineWidth(inputCfg.get('thickness', 1))
         inObjs.append(inObj)
         if('legend' in inputCfg):
             legends.append(inputCfg['legend'])
@@ -173,7 +177,7 @@ for plot in cfg:
             if plot['opt']['leg']['mean']:
                 legend += f';  #mu={inObj.GetMean():.3f}'
             if plot['opt']['leg']['sigma']:
-                legend += f';  #sigma={inObj.GetStdDev():.3f}'
+                legend += f';  #sigma={inObj.GetStdDev():.3f}'        
         if(legend != ''):
             leg.AddEntry(inObj, legend, 'lp')
         

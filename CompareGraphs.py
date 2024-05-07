@@ -3,7 +3,7 @@ import os
 import yaml
 from rich import print
 
-from ROOT import TFile, TCanvas, TLegend, TLine, TH1, TGraph, TGraphErrors, TGraphAsymmErrors, TH1D, gStyle, TLatex, TH2, TF1
+from ROOT import TFile, TCanvas, TLegend, TLine, TH1, TGraph, TGraphErrors, TGraphAsymmErrors, TH1D, gStyle, TLatex, TH2, TF1, TH1F
 
 import fempy
 from fempy import logger as log
@@ -203,23 +203,56 @@ for plot in cfg:
         y2 = plot['ratio']['rangey'][1]
         frame = pad.DrawFrame(x1, y1, x2, y2, TranslateToLatex(plot['opt']['title']))
         frame.GetYaxis().SetTitle('Ratio')
-        hDen = inObjs[0].Clone()
+        
+        obj_types = {type(inObj) for inObj in inObjs}
+        for obj_type in obj_types: 
+            if obj_type is not TF1 and obj_type is not TH1F:
+                log.error('Ratio for type %s is not implemented. Skipping this object', type(inObj))
+                continue
+        
+        if(isinstance(inObjs[0], TF1)):
+            lowLimit = 0    
+            uppLimit = 0    
+            if not any(isinstance(inObj, TH1) for inObj in inObjs):
+                nBins = plot['ratio']['nbins']
+                inObjs.GetRange(lowLimit, uppLimit)
+            else:
+                for inObj in inObjs:
+                    if isinstance(inObj, TH1):
+                        nBins = inObj.GetNbinsX()
+                        lowLimit = inObj.GetBinCenter(1) - inObj.GetBinWidth(1) / 2
+                        uppLimit = inObj.GetBinCenter(inObj.GetNbinsX()) + inObj.GetBinWidth(1) / 2
+                        break
+            
+            hDen = TH1D('hRatio', 'hRatio', nBins, lowLimit, uppLimit)
+            hDen.Add(inObjs[0], 1)
+        if(isinstance(inObjs[0], TH1)):
+            hDen = inObjs[0].Clone()
+        
         hDen.Rebin(plot['ratio']['rebin'])
         hDen.Sumw2()
 
-        if isinstance(inObj, TH1):
-            for inObj in inObjs[1:]:
+        for inObj in inObjs[1:]:
+            if(isinstance(inObj, TF1)):
+                hRatio = hDen.Clone()
+                hRatio.Reset('ICESM')
+                hRatio.Add(inObj, 1)
+            if(isinstance(inObj, TH1)):
                 hRatio = inObj.Clone()
-                hRatio.Rebin(plot['ratio']['rebin'])
-                hRatio.Divide(hDen)
-                if('drawopt' in plot['ratio']):
-                    hRatio.Draw('same ' + plot['ratio']['drawopt'])
-                else:
-                    hRatio.Draw('same pe')
+                hRatio.SetMarkerColor(inObj.GetMarkerColor())
+                hRatio.SetMarkerStyle(inObj.GetMarkerStyle())
+                hRatio.SetMarkerSize(inObj.GetMarkerSize())
+   
+            hRatio.SetLineColor(inObj.GetLineColor())
+            hRatio.SetLineWidth(inObj.GetLineWidth())
+            hRatio.Rebin(plot['ratio']['rebin'])
+            hRatio.Divide(hDen)
 
-        else:
-            log.error('Ratio for type %s is not implemented. Skipping this object', type(inObj))
-            continue
+            if('drawopt' in plot['ratio']):
+                hRatio.Draw('same ' + plot['ratio']['drawopt'])
+            else:
+                hRatio.Draw('same pe')
+
 
         line = TLine(plot['opt']['rangex'][0], 1, plot['opt']['rangex'][1], 1)
         line.SetLineColor(13)

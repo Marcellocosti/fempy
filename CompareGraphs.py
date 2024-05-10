@@ -88,19 +88,28 @@ for plot in cfg:
             inObj.SetMarkerStyle(inputCfg['markerstyle'])
             inObj.SetMarkerSize(inputCfg['markersize'])
             inObj.SetMarkerColor(style.GetColor(inputCfg['color']))
-        
-        if isinstance(inObj, TF1):
-            print('Loading TF1!')
 
         drawOpts.append(inputCfg.get('drawopt', 'p' if isinstance(inObj, TH1) else 'pe'))
         inObj.SetLineColor(style.GetColor(inputCfg['color']))
         inObj.SetLineWidth(inputCfg.get('thickness', 1))
         inObjs.append(inObj)
-        if('legend' in inputCfg):
-            legends.append(inputCfg['legend'])
-        else:
-            legends.append('')
 
+        if('chi2' in inputCfg):
+            folder, file_name = os.path.split(inputCfg['name'])
+            chi2Histo = Load(inFile, os.path.join(folder, 'hChi2DOF'))
+            chi2DOF = '#chi^{2}/DOF=' + str("{:.2f}".format(chi2Histo.GetBinContent(1)))
+        
+        if('legend' in inputCfg):
+            if 'chi2DOF' in globals():
+                legends.append("#splitline{" + inputCfg['legend'] + "}{" + chi2DOF + "}")
+            else:
+                legends.append(inputCfg['legend'])
+        else:
+            if 'chi2DOF' in globals():
+                legends.append(chi2DOF)
+            else:
+                legends.append('')
+            
     # Define the canvas
     nPanelsX, nPanelsY = fempy.utils.GetNPanels(len(panels))
     cPlot = TCanvas("cPlot", "cPlot", 600*nPanelsX, 600*nPanelsY)

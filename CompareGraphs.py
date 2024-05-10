@@ -100,16 +100,17 @@ for plot in cfg:
             chi2DOF = '#chi^{2}/DOF=' + str("{:.2f}".format(chi2Histo.GetBinContent(1)))
         
         if('legend' in inputCfg):
-            if 'chi2DOF' in globals():
+            if 'chi2' in inputCfg:
                 legends.append("#splitline{" + inputCfg['legend'] + "}{" + chi2DOF + "}")
             else:
                 legends.append(inputCfg['legend'])
         else:
-            if 'chi2DOF' in globals():
+            if 'chi2' in inputCfg:
                 legends.append(chi2DOF)
             else:
                 legends.append('')
             
+        print(legends[-1])
     # Define the canvas
     nPanelsX, nPanelsY = fempy.utils.GetNPanels(len(panels))
     cPlot = TCanvas("cPlot", "cPlot", 600*nPanelsX, 600*nPanelsY)

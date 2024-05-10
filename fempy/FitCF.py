@@ -164,6 +164,8 @@ for iFit, fitcf in enumerate(cfg['fitcfs']):
     hChi2DOF.Fill(0.5, modelFitters[-1].GetChi2Ndf())
     print('Chi2 / DOF: ' + str(modelFitters[-1].GetChi2Ndf()))
     print('\n\n')
+    hChi2DOFManual = TH1D('hChi2DOFManual', 'hChi2DOFManual', 1, 0, 1)
+    hChi2DOFManual.Fill(0.5, modelFitters[-1].GetChi2NdfManual())
     cFit = TCanvas('cFit', '', 600, 600)
     if('drawsumcomps' in fitcf):
         modelFitters[-1].Draw(cFit, legLabels, fitcf['legcoords'], onBaseline,
@@ -184,6 +186,7 @@ for iFit, fitcf in enumerate(cfg['fitcfs']):
         modelFitters[-1].SaveScatPars().Write()
     fitFunction.Write()
     hChi2DOF.Write()
+    hChi2DOFManual.Write()
 
     #for iPar in range(fitFunction.GetNpar()):
     #    cfg[f'Fit n°{iFit}, par {iPar}'] = fitFunction.GetParName(iPar) + ", " + str(fitFunction.GetParameter(iPar))

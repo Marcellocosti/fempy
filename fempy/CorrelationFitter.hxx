@@ -392,6 +392,19 @@ class CorrelationFitter {
 
     double GetChi2Ndf() { return fFit->GetChisquare() / fFit->GetNDF(); }
 
+    double GetChi2NdfManual() { 
+        double chi2 = 0.;
+        for(int iBin=0; iBin<this->fFitHist->GetNbinsX(); iBin++) {
+            if(this->fFitHist->GetBinError(iBin+1) != 0) {
+                chi2 += ( (this->fFit->Eval(this->fFitHist->GetBinCenter(iBin+1)) - this->fFitHist->GetBinContent(iBin+1)) * 
+                          (this->fFit->Eval(this->fFitHist->GetBinCenter(iBin+1)) - this->fFitHist->GetBinContent(iBin+1)) ) /
+                          (this->fFitHist->GetBinError(iBin+1) * this->fFitHist->GetBinError(iBin+1));
+            }
+        }
+
+        return chi2 / fFit->GetNDF(); 
+    }
+
     /*
     Define a canvas before calling this function and pass gPad as TVirtualPad
     */

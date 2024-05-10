@@ -31,6 +31,9 @@ double Pol4PowLaw(double *x, double *par);
 double WeightedPol3andPol3(double *x, double *par);
 double WeightedPol3andPol3Powlaw(double *x, double *par);
 double WeightedPol3andPol2(double *x, double *par);
+double WeightedPol3Pol3AndPol1(double *x, double *par);
+double WeightedPol3Pol3powlawAndPol1(double *x, double *par);
+double WeightedPol3Pol3AndPol2(double *x, double *par);
 double WeightedPol3Pol3powlawAndPol2(double *x, double *par);
 double SillKStar(double *x, double *par);
 
@@ -57,9 +60,11 @@ std::map<TString, std::tuple<double (*)(double *x, double *par), int>> functions
     {"weighted_pol3_and_pol3", {WeightedPol3andPol3, 9}},
     {"weighted_pol3_and_pol3powlaw", {WeightedPol3andPol3Powlaw, 10}},
     {"weightedpol3andpol2", {WeightedPol3andPol2, 12}},
+    {"weighted_pol3_pol3_and_pol1", {WeightedPol3Pol3AndPol1, 11}},
+    {"weighted_pol3_pol3powlaw_and_pol1", {WeightedPol3Pol3powlawAndPol1, 12}},
+    {"weighted_pol3_pol3_and_pol2", {WeightedPol3Pol3AndPol2, 12}},
     {"weighted_pol3_pol3powlaw_and_pol2", {WeightedPol3Pol3powlawAndPol2, 13}},
     {"sillkstar", {SillKStar, 3}}};
-
 
 double GlobNorm(double *x, double *par) { return 1.; }
 
@@ -100,6 +105,18 @@ double WeightedPol3andPol3Powlaw(double *x, double *par) {
 }
 
 double WeightedPol3andPol2(double *x, double *par) {
+    return par[0] * Pol3(x, &par[1]) + (1 - par[0]) * Pol3(x, &par[5]) + Pol2(x, &par[9]); 
+}
+
+double WeightedPol3Pol3AndPol1(double *x, double *par) {
+    return par[0] * Pol3(x, &par[1]) + (1 - par[0]) * Pol3(x, &par[5]) + Pol1(x, &par[9]); 
+}
+
+double WeightedPol3Pol3powlawAndPol1(double *x, double *par) {
+    return par[0] * Pol3(x, &par[1]) + (1 - par[0]) * Pol3PowLaw(x, &par[5]) + Pol1(x, &par[10]); 
+}
+
+double WeightedPol3Pol3AndPol2(double *x, double *par) {
     return par[0] * Pol3(x, &par[1]) + (1 - par[0]) * Pol3(x, &par[5]) + Pol2(x, &par[9]); 
 }
 

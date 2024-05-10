@@ -88,22 +88,6 @@ for plot in cfg:
             inObj.SetMarkerStyle(inputCfg['markerstyle'])
             inObj.SetMarkerSize(inputCfg['markersize'])
             inObj.SetMarkerColor(style.GetColor(inputCfg['color']))
-        
-        if isinstance(inObj, TF1):
-            print('Loading TF1!')
-
-        drawOpts.append(inputCfg.get('drawopt', 'p' if isinstance(inObj, TH1) else 'pe'))
-        inObj.SetLineColor(style.GetColor(inputCfg['color']))
-        inObj.SetLineWidth(inputCfg.get('thickness', 1))
-        inObjs.append(inObj)
-        if('legend' in inputCfg):
-            legends.append(inputCfg['legend'])
-        else:
-            legends.append('')
-
-            inObj.SetMarkerStyle(inputCfg['markerstyle'])
-            inObj.SetMarkerSize(inputCfg['markersize'])
-            inObj.SetMarkerColor(style.GetColor(inputCfg['color']))
 
         drawOpts.append(inputCfg.get('drawopt', 'p' if isinstance(inObj, TH1) else 'pe'))
         inObj.SetLineColor(style.GetColor(inputCfg['color']))

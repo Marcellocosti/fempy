@@ -110,6 +110,7 @@ for plot in cfg:
             else:
                 legends.append('')
             
+        print(legends[-1])
     # Define the canvas
     nPanelsX, nPanelsY = fempy.utils.GetNPanels(len(panels))
     cPlot = TCanvas("cPlot", "cPlot", 600*nPanelsX, 600*nPanelsY)

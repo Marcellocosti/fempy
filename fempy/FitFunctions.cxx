@@ -3,11 +3,15 @@
 #include <tuple>
 #include <complex>
 
+#include "TDatabasePDG.h"
 #include "TF1.h"
+#include "TFile.h"
 #include "TFitResult.h"
 #include "TH1.h"
+#include "TSpline.h"
 #include "TMath.h"
 #include "gsl/gsl_sf_dawson.h"
+// #include <boost/python.hpp>
 
 double GlobNorm(double *x, double *par);
 double Pol0(double *x, double *par);
@@ -59,7 +63,6 @@ std::map<TString, std::tuple<double (*)(double *x, double *par), int>> functions
     {"weightedpol3andpol2", {WeightedPol3andPol2, 12}},
     {"weighted_pol3_pol3powlaw_and_pol2", {WeightedPol3Pol3powlawAndPol2, 13}},
     {"sillkstar", {SillKStar, 3}}};
-
 
 double GlobNorm(double *x, double *par) { return 1.; }
 
@@ -325,3 +328,14 @@ double ComplexLednicky_Singlet_doublegaussian_lambda(double *x, double *par)
     return sourcePar3 * (sourcePar2 * GeneralLednicky(kStar, sourcePar0, ScatLen, potPar2) 
            + (1 - sourcePar2) * GeneralLednicky(kStar, sourcePar1, ScatLen, potPar2)) + 1. - sourcePar3;
 }
+
+// std::tuple<double (*)(double *x, double *par), int> getValueFromMap(TString key) {
+//     return functions[key];
+// }
+
+// // Python module definition
+// using namespace boost::python;
+// BOOST_PYTHON_MODULE(FunctionMap) {
+//     // Expose the functions to Python
+//     def("get_function", getValueFromMap);
+// }

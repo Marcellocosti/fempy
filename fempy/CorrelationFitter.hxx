@@ -122,8 +122,6 @@ class CorrelationFitter {
 
     void Add(TString name, TH1* hist, std::vector<std::tuple<std::string, double, double, double>> pars, std::string addmode) {
         TH1D *splineHisto = static_cast<TH1D*>(hist);
-        cout << "First bin content: " << splineHisto->GetBinContent(1) << endl;
-        cout << "First bin error: " << splineHisto->GetBinError(1) << endl;
         TSpline3* sp3 = new TSpline3(hist);
         
         this->Add(name, sp3, pars, addmode);
@@ -135,10 +133,6 @@ class CorrelationFitter {
     }
 
     void Add(TString name, TSpline3* spline, std::vector<std::tuple<std::string, double, double, double>> pars, std::string addmode) {
-        cout << "Spline eval first bin: " << spline->Eval(2) << endl;
-        cout << "Spline eval second bin: " << spline->Eval(6) << endl;
-        cout << "Spline eval flat: " << spline->Eval(89) << endl;
-        cout << "Spline eval flat: " << spline->Eval(570) << endl;
         this->fFitSplines.push_back(spline);
         this->fFitFuncComps.push_back(name);
         this->fAddModes.push_back(addmode); 
@@ -250,6 +244,92 @@ class CorrelationFitter {
         histoPars->SetStats(0);
         histoPars->GetXaxis()->SetLabelSize(100);
         return histoPars;
+    }
+
+    TH1D *SaveFitParsSplitComponents(std::vector<int> compstosplit, std::vector<std::vector<int>> compsnormsidx, 
+                                     std::vector<std::vector<std::string>> compsnames, std::vector<std::vector<std::string>> normslabels) {
+        if(!this->fFit) {
+            throw std::invalid_argument("Fit not performed, component cannot be evaluated!");
+        }
+        
+        // Calculate the number of bins needed, considering that each component will have its normalization factor
+        int nCompsPars = 0;
+        for(int iSplitComp=0; iSplitComp<compsnames.size(); iSplitComp++) {
+            for(int iSubComp=0; iSubComp<compsnames[iSplitComp].size(); iSubComp++) {
+                cout << compsnames[iSplitComp][iSubComp] << endl;
+                nCompsPars += std::get<1>(functions[compsnames[iSplitComp][iSubComp]]) + 1;
+            }
+        }
+        cout << "Bins that need to be added: " << nCompsPars << endl;
+
+        TH1D *histoAllCompsPars = new TH1D("hAllCompsPars", "hAllCompsPars", this->fFit->GetNpar() + nCompsPars, 0, this->fFit->GetNpar() + nCompsPars);
+        cout << "Number of bins of the histogram: " << histoAllCompsPars->GetNbinsX() << endl;
+        if(this->fGlobNorm) {
+            // put the global norm at the beginning
+            histoAllCompsPars->SetBinContent(1, this->fFit->GetParameter(this->fFit->GetNpar()-1));
+            histoAllCompsPars->GetXaxis()->SetBinLabel(1, this->fFit->GetParName(this->fFit->GetNpar()-1));
+            for(int iPar=0; iPar<this->fFit->GetNpar()-1; iPar++) {
+                histoAllCompsPars->SetBinContent(iPar+2, this->fFit->GetParameter(iPar));
+                histoAllCompsPars->GetXaxis()->SetBinLabel(iPar+2, this->fFit->GetParName(iPar));
+            }
+        } else {
+            for(int iPar=0; iPar<this->fFit->GetNpar(); iPar++) {
+                histoAllCompsPars->SetBinContent(iPar+1, this->fFit->GetParameter(iPar));
+                histoAllCompsPars->GetXaxis()->SetBinLabel(iPar+1, this->fFit->GetParName(iPar));
+            }
+        }
+
+        int nBinNewCompPar = this->fFit->GetNpar();
+        cout << "Bins filled up to bin number " << nBinNewCompPar << endl; 
+        cout << endl;
+        for(int iSplitComp=0; iSplitComp<compstosplit.size(); iSplitComp++) {
+            int previousCompsPars = 0; 
+            int startCompPar = accumulate(fNPars.begin(), std::next(fNPars.begin(), compstosplit[iSplitComp]), 0) + this->fGlobNorm + compstosplit[iSplitComp];
+            cout << "Start picking the subcomponents parameters from " << startCompPar << endl;
+            for(int iComp=0; iComp<compsnames[iSplitComp].size(); iComp++) {
+
+                    // Setting the norm
+                    cout << "Filling bin number " << nBinNewCompPar+1 << endl;
+                    if(compsnormsidx[iSplitComp][iComp] > 0) {
+                        cout << "Clean norm" << endl;
+                        cout << "with bin content " << histoAllCompsPars->GetBinContent(startCompPar + compsnormsidx[iSplitComp][iComp] - 1) << endl;
+                        histoAllCompsPars->SetBinContent(nBinNewCompPar+1, histoAllCompsPars->GetBinContent(startCompPar+compsnormsidx[iSplitComp][iComp]-1));
+                    } 
+                    if (compsnormsidx[iSplitComp][iComp] < 0) {
+                        cout << "Complementary norm" << endl;
+                        cout << "with bin content " << 1-histoAllCompsPars->GetBinContent(startCompPar + compsnormsidx[iSplitComp][iComp] - 1) << endl;
+                        histoAllCompsPars->SetBinContent(nBinNewCompPar+1, 1 - histoAllCompsPars->GetBinContent(startCompPar+compsnormsidx[iSplitComp][iComp]-1));
+                    } 
+                    if (compsnormsidx[iSplitComp][iComp] == 0) {
+                        cout << "Unitary norm" << endl;
+                        histoAllCompsPars->SetBinContent(nBinNewCompPar+1, 1);
+                    } 
+                    
+                    // std::string label(normslabels[iSplitComp][iComp]);
+                    histoAllCompsPars->GetXaxis()->SetBinLabel(nBinNewCompPar+1, normslabels[iSplitComp][iComp].c_str());
+                    cout << endl;
+                    
+                    int compPar = std::get<1>(functions[compsnames[iSplitComp][iComp]]);
+                    for(int iCompPar=0; iCompPar<compPar; iCompPar++) {
+                        cout << "Filling bin number " << nBinNewCompPar+iCompPar+2 << endl;
+                        cout << "with content of bin number " << startCompPar+iCompPar+previousCompsPars+1 << endl;
+                        cout << "namely " << histoAllCompsPars->GetBinContent(startCompPar+iCompPar+previousCompsPars+1) << endl;
+                        histoAllCompsPars->SetBinContent(nBinNewCompPar+iCompPar+2, histoAllCompsPars->GetBinContent(startCompPar+iCompPar+previousCompsPars+1));
+                        histoAllCompsPars->GetXaxis()->SetBinLabel(nBinNewCompPar+iCompPar+2, this->fFit->GetParName(startCompPar+iCompPar+previousCompsPars-this->fGlob));
+                        cout << endl;
+                    }       
+                    previousCompsPars += compPar;
+    
+                    nBinNewCompPar += compPar + 1;
+                    cout << "Finished component" << endl;
+                    cout << endl;
+    
+            }
+        }
+
+        histoAllCompsPars->SetStats(0);
+        histoAllCompsPars->GetXaxis()->SetLabelSize(100);
+        return histoAllCompsPars;
     }
 
     TH1D *SaveScatPars() {

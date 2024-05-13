@@ -93,6 +93,7 @@ for plot in cfg:
         drawOpts.append(inputCfg.get('drawopt', 'p' if isinstance(inObj, TH1) else 'pe'))
         inObj.SetLineColor(style.GetColor(inputCfg['color']))
         inObj.SetLineWidth(inputCfg.get('thickness', 1))
+        inObj.SetLineStyle(inputCfg.get('linestyle', 1))
         inObjs.append(inObj)
 
         if('chi2' in inputCfg):

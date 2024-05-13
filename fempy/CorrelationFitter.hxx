@@ -252,40 +252,34 @@ class CorrelationFitter {
         return histoPars;
     }
 
-    TH1D *SaveScatPars() {
+    TGraph *SaveScatPars() {
         if(!this->fFit) {
             throw std::invalid_argument("Fit not performed, component cannot be evaluated!");
         }
-    
-        int genuineComp = 0;
-        for(int icomp=0; icomp<fFitFuncComps.size(); icomp++) {
-            // std::string funcName = this->fFitFuncComps[icomp];
-            if(this->fFitFuncComps[icomp].Contains("Lednicky")){
-                genuineComp = icomp;
-            }
-        }
-        int startPar = accumulate(fNPars.begin(), std::next(fNPars.begin(), genuineComp+1), 0);
-        
-        std::vector<double> scatPars;
-        std::vector<double> scatParsErrors;
-        std::vector<std::string> scatParsLabels;
+     
+        double reScatLength;
+        double imScatLength;
+        double reScatLengthError;
+        double imScatLengthError;
+        double effRange;
+        TGraphErrors *gScatPars = new TGraphErrors(1);
+        gScatPars->SetTitle("Scattering parameters;Re_a0;Im_a0");
+        gScatPars->SetName("gScatPars");
         for(int iPar=0; iPar<this->fFit->GetNpar(); iPar++) {
             std::string parName = this->fFit->GetParName(iPar);
-            if (parName.find("sp_") != std::string::npos) {
-                cout << "Par name: " << this->fFit->GetParName(iPar) << endl;
-                scatPars.push_back(this->fFit->GetParameter(iPar));
-                scatParsErrors.push_back(this->fFit->GetParError(iPar));
-                scatParsLabels.push_back(this->fFit->GetParName(iPar));
+            if (parName.find("re_a0") != std::string::npos) {
+                reScatLength = this->fFit->GetParameter(iPar);
+                reScatLengthError = this->fFit->GetParError(iPar);
+            } 
+            if (parName.find("im_a0") != std::string::npos) {
+                imScatLength = this->fFit->GetParameter(iPar);
+                imScatLengthError = this->fFit->GetParError(iPar);
             } 
         }
 
-        TH1D *histoScatPars = new TH1D("hScatPars", "hScatPars", scatPars.size(), 0, scatPars.size());
-        for(int iScatPar=0; iScatPar<scatPars.size(); iScatPar++) {    
-            histoScatPars->SetBinContent(iScatPar+1, scatPars[iScatPar]);
-            histoScatPars->SetBinError(iScatPar+1, scatParsErrors[iScatPar]);
-            histoScatPars->GetXaxis()->SetBinLabel(iScatPar+1, scatParsLabels[iScatPar].c_str());
-        }
-        return histoScatPars;
+        gScatPars->SetPoint(1, reScatLength, imScatLength);
+        gScatPars->SetPointError(1, reScatLengthError, imScatLengthError);
+        return gScatPars;
     }
     
     TH1D *PullDistribution() {

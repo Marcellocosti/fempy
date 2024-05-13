@@ -163,33 +163,41 @@ class CorrelationFitter {
         this->fFitPars.insert({this->fFitPars.size(), init});
     }
 
-    TF1 *GetComponent(int icomp, int ibaseline=-1, bool onbaseline=true) {
+    std::vector<TF1 *> GetComponents(std::vector<int> compsidxs, std::vector<bool> onbaseline, int idxBaseline=-1) {
         if(!this->fFit) {
             throw std::invalid_argument("Fit not performed, component cannot be evaluated!");
         }
-        if(ibaseline != -1 && onbaseline) {
-            // cout << "Evaluating with baseline" << endl;
-            // cout << this->fFitFuncComps[icomp] << endl;
-            // cout << "Evaluating with baseline" << endl;
-            // cout << this->fFitFuncEval[icomp]->Eval(2) << endl;
-            // cout << this->fNorms[ibaseline] << endl;
-            // cout << this->fFitFuncEval[ibaseline]->Eval(2) << endl;
-            TF1 *compWithoutNormAndBaseline = new TF1(this->fFitFuncComps[icomp],
-                [&, this, icomp, ibaseline](double *x, double *pars) {
-                   return ( this->fFitFuncEval[icomp]->Eval(x[0]) - 
-                          ( this->fFitFuncEval[ibaseline]->Eval(x[0])/this->fNorms[ibaseline] ) )
-                          / this->fNorms[icomp];  
-            }, this->fFitRangeMin, this->fFitRangeMax, 0);
-            return compWithoutNormAndBaseline;
-        } else {
-            // cout << "Evaluating without baseline" << endl;
-            // cout << icomp << " " << this->fFitFuncEval[icomp]->Eval(2) << this->fNorms[icomp] << endl;
-            TF1 *compWithoutNorm = new TF1(this->fFitFuncComps[icomp],
-                [&, this, icomp](double *x, double *pars) {
-                   return this->fFitFuncEval[icomp]->Eval(x[0]) / this->fNorms[icomp];  
-            }, this->fFitRangeMin, this->fFitRangeMax, 0);
-            return compWithoutNorm;
+        if(compsidxs.size() != onbaseline.size()) {
+            throw std::invalid_argument("Number of components does not match onbaseline information!");
         }
+
+        std::vector<TF1 *> comps;
+        for(int iToBeSavedComp=0; iToBeSavedComp<compsidxs.size(); iToBeSavedComp++) { 
+            if(idxBaseline != -1 && onbaseline[iToBeSavedComp]) {
+                // cout << "Evaluating with baseline" << endl;
+                // cout << this->fFitFuncComps[compsidxs[iToBeSavedComp]] << endl;
+                // cout << "Evaluating with baseline" << endl;
+                // cout << this->fFitFuncEval[compsidxs[iToBeSavedComp]]->Eval(2) << endl;
+                // cout << this->fNorms[idxBaseline] << endl;
+                // cout << this->fFitFuncEval[idxBaseline]->Eval(2) << endl;
+                comps.push_back(new TF1(this->fFitFuncComps[compsidxs[iToBeSavedComp]],
+                    [&, this, compsidxs, iToBeSavedComp, idxBaseline](double *x, double *pars) {
+                       return ( this->fFitFuncEval[compsidxs[iToBeSavedComp]]->Eval(x[0]) - 
+                              ( this->fFitFuncEval[idxBaseline]->Eval(x[0])/this->fNorms[idxBaseline] ) )
+                              / this->fNorms[compsidxs[iToBeSavedComp]];  
+                }, this->fFitRangeMin, this->fFitRangeMax, 0));
+                // return compWithoutNormAndBaseline;
+            } else {
+                // cout << "Evaluating without baseline" << endl;
+                // cout << compsidxs[iToBeSavedComp] << " " << this->fFitFuncEval[compsidxs[iToBeSavedComp]]->Eval(2) << this->fNorms[compsidxs[iToBeSavedComp]] << endl;
+                comps.push_back(new TF1(this->fFitFuncComps[compsidxs[iToBeSavedComp]],
+                    [&, this, compsidxs, iToBeSavedComp](double *x, double *pars) {
+                       return this->fFitFuncEval[compsidxs[iToBeSavedComp]]->Eval(x[0]) / this->fNorms[compsidxs[iToBeSavedComp]];  
+                }, this->fFitRangeMin, this->fFitRangeMax, 0));
+                // return compWithoutNorm;
+            }
+        }
+        return comps;
     }
 
     TH1D *GetComponentPars(int icomp) {
@@ -209,6 +217,8 @@ class CorrelationFitter {
 
     TF1 *GetGenuine() {
 
+        TF1 *noGenuine = nullptr;
+        
         int genuineIdx;
         for(int iFunc=0; iFunc<this->fFitFuncComps.size(); iFunc++) {
             if(this->fFitFuncComps[iFunc].Contains("Lednicky")) {
@@ -217,7 +227,7 @@ class CorrelationFitter {
             }
         }
         
-        int startGenuinePar;
+        int startGenuinePar=-1;
         for(int iPar=0; iPar<this->fFit->GetNpar(); iPar++) {
             std::string parName = this->fFit->GetParName(iPar);
             if (parName.find("re_a0") != std::string::npos) {
@@ -226,13 +236,18 @@ class CorrelationFitter {
         }
 
         // components.push_back(new TF1(Form("iComp_%.0f", iTerm), fFitFunc[iFunc], fFitRangeMin, fFitRangeMax, fNPars[iTerm+1]));
-        TF1 *fGenuine = new TF1("fGenuine", std::get<0>(functions[this->fFitFuncComps[genuineIdx]]), fFitRangeMin, fFitRangeMax, 
-                                std::get<1>(functions[this->fFitFuncComps[genuineIdx]]));
-        for(int iGenPar=0; iGenPar<fGenuine->GetNpar(); iGenPar++) {
-            fGenuine->FixParameter(iGenPar, this->fFit->GetParameter(iGenPar + startGenuinePar));
+        if(startGenuinePar != -1) {
+            TF1 *genuine = new TF1("genuine", std::get<0>(functions[this->fFitFuncComps[genuineIdx]]), fFitRangeMin, fFitRangeMax, 
+                                    std::get<1>(functions[this->fFitFuncComps[genuineIdx]]));
+            for(int iGenPar=0; iGenPar<genuine->GetNpar(); iGenPar++) {
+                genuine->FixParameter(iGenPar, this->fFit->GetParameter(iGenPar + startGenuinePar));
+            }
+            // fGenuine = &genuine;
+            return genuine;
+        } else {
+            return noGenuine;
         }
 
-        return fGenuine;
     }
 
     TH1D *SaveFreeFixPars() {
@@ -515,7 +530,7 @@ class CorrelationFitter {
         legend->SetTextSize(0.045);
         legend->Draw("same");
         pad->Update();
-        // cout << "Drawn!" << endl;
+        cout << "Drawn!" << endl;
 
     }
 

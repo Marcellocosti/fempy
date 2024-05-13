@@ -10,6 +10,7 @@ python3 CorrelationFitter.py cfg.yml
 import os
 import argparse
 import yaml
+import ctypes
 
 from ROOT import TFile, TCanvas, gInterpreter, TH1, TH1D
 gInterpreter.ProcessLine(f'#include "{os.environ.get("FEMPY")}fempy/CorrelationFitter.hxx"')
@@ -97,7 +98,7 @@ for iFit, fitcf in enumerate(cfg['fitcfs']):
         if('isbaseline' in term):
             if(term['isbaseline']):
                 baselineIdx = iTerm
-        
+
         legLabels.append(term['legentry'])
         onBaseline.append(term['onbaseline'])
         if('shift' in term):
@@ -173,7 +174,8 @@ for iFit, fitcf in enumerate(cfg['fitcfs']):
     else:
         modelFitters[-1].Draw(cFit, legLabels, fitcf['legcoords'], linesThickness,
                               onBaseline, shifts, baselineIdx)
-    modelFitters[-1].GetGenuine().Write("fGenuine")
+    #if(modelFitters[-1].GetGenuine() != 0):
+    #    modelFitters[-1].GetGenuine().Write("fGenuine")
     if('debug' in fitcf):
         modelFitters[-1].Debug()
         
@@ -189,6 +191,21 @@ for iFit, fitcf in enumerate(cfg['fitcfs']):
     hChi2DOF.Write()
     hChi2DOFManual.Write()
 
+    print('Getting components ...')
+    for iTerm, term in enumerate(fitcf['model']):
+        if('savetofile' in term):
+            if(term['savetofile']):
+                compsToFile.append([iTerm, term.get('onbaseline', 0), baselineIdx])
+
+    print(compsToFile)
+    print('Saved, now writing to file ...')
+    compsToBeWritten = modelFitters[-1].GetComponents([idx[0] for idx in compsToFile], 
+                                                      [onBas[1] for onBas in compsToFile],
+                                                      baselineIdx)
+    print(len(compsToBeWritten))
+    for comp in compsToBeWritten:
+        comp.Write("f" + comp.GetName())
+    print('Saved components!')
     #for iPar in range(fitFunction.GetNpar()):
     #    cfg[f'Fit n°{iFit}, par {iPar}'] = fitFunction.GetParName(iPar) + ", " + str(fitFunction.GetParameter(iPar))
     #pdfFileName = fitcf['fitname'] + cfg["suffix"] + ".pdf"

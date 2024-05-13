@@ -262,9 +262,6 @@ class CorrelationFitter {
         double reScatLengthError;
         double imScatLengthError;
         double effRange;
-        TGraphErrors *gScatPars = new TGraphErrors(1);
-        gScatPars->SetTitle("Scattering parameters;Re_a0;Im_a0");
-        gScatPars->SetName("gScatPars");
         for(int iPar=0; iPar<this->fFit->GetNpar(); iPar++) {
             std::string parName = this->fFit->GetParName(iPar);
             if (parName.find("re_a0") != std::string::npos) {
@@ -277,8 +274,11 @@ class CorrelationFitter {
             } 
         }
 
-        gScatPars->SetPoint(1, reScatLength, imScatLength);
-        gScatPars->SetPointError(1, reScatLengthError, imScatLengthError);
+        TGraphErrors *gScatPars = new TGraphErrors(1, &reScatLength, &imScatLength, &reScatLengthError, &imScatLengthError); // 1);
+        gScatPars->SetTitle("Scattering parameters;Re_a0;Im_a0");
+        gScatPars->SetName("gScatPars");
+        // gScatPars->SetPoint(1, reScatLength, imScatLength);
+        // gScatPars->SetPointError(1, reScatLengthError, imScatLengthError);
         return gScatPars;
     }
     

@@ -85,6 +85,7 @@ for plot in cfg:
                 inObj.SetFillStyle(inputCfg['errbarfillstyle'])
                 inObj.SetFillColorAlpha(style.GetColor(inputCfg['color']), inputCfg['errbarfillalpha'])
 
+        if isinstance(inObj, TH1) or isinstance(inObj, TGraph):
             inObj.SetMarkerStyle(inputCfg['markerstyle'])
             inObj.SetMarkerSize(inputCfg['markersize'])
             inObj.SetMarkerColor(style.GetColor(inputCfg['color']))

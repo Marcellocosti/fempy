@@ -174,8 +174,8 @@ for iFit, fitcf in enumerate(cfg['fitcfs']):
     else:
         modelFitters[-1].Draw(cFit, legLabels, fitcf['legcoords'], linesThickness,
                               onBaseline, shifts, baselineIdx)
-    #if(modelFitters[-1].GetGenuine() != 0):
-    #    modelFitters[-1].GetGenuine().Write("fGenuine")
+    if('isfitcf' in fitcf):
+        modelFitters[-1].GetGenuine().Write("fGenuine")
     if('debug' in fitcf):
         modelFitters[-1].Debug()
         

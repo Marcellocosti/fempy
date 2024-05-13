@@ -217,8 +217,6 @@ class CorrelationFitter {
 
     TF1 *GetGenuine() {
 
-        TF1 *noGenuine = nullptr;
-        
         int genuineIdx;
         for(int iFunc=0; iFunc<this->fFitFuncComps.size(); iFunc++) {
             if(this->fFitFuncComps[iFunc].Contains("Lednicky")) {
@@ -227,7 +225,7 @@ class CorrelationFitter {
             }
         }
         
-        int startGenuinePar=-1;
+        int startGenuinePar;
         for(int iPar=0; iPar<this->fFit->GetNpar(); iPar++) {
             std::string parName = this->fFit->GetParName(iPar);
             if (parName.find("re_a0") != std::string::npos) {
@@ -235,19 +233,13 @@ class CorrelationFitter {
             }
         }
 
-        // components.push_back(new TF1(Form("iComp_%.0f", iTerm), fFitFunc[iFunc], fFitRangeMin, fFitRangeMax, fNPars[iTerm+1]));
-        if(startGenuinePar != -1) {
-            TF1 *genuine = new TF1("genuine", std::get<0>(functions[this->fFitFuncComps[genuineIdx]]), fFitRangeMin, fFitRangeMax, 
-                                    std::get<1>(functions[this->fFitFuncComps[genuineIdx]]));
-            for(int iGenPar=0; iGenPar<genuine->GetNpar(); iGenPar++) {
-                genuine->FixParameter(iGenPar, this->fFit->GetParameter(iGenPar + startGenuinePar));
-            }
-            // fGenuine = &genuine;
-            return genuine;
-        } else {
-            return noGenuine;
+        TF1 *fGenuine = new TF1("fGenuine", std::get<0>(functions[this->fFitFuncComps[genuineIdx]]), fFitRangeMin, fFitRangeMax, 
+                                std::get<1>(functions[this->fFitFuncComps[genuineIdx]]));
+        for(int iGenPar=0; iGenPar<fGenuine->GetNpar(); iGenPar++) {
+            fGenuine->FixParameter(iGenPar, this->fFit->GetParameter(iGenPar + startGenuinePar));
         }
 
+        return fGenuine;
     }
 
     TH1D *SaveFreeFixPars() {

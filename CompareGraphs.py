@@ -46,9 +46,7 @@ for plot in cfg:
             inObj = ChangeUnits(inObj, inputCfg['changeunits'])
         
         if isinstance(inObj, TH2):
-            print(type(inObj))
             inObj.SetDirectory(0)
-            print(type(inObj))
             if('projX' in inputCfg):
                 if(inputCfg['projX']):
                     if(inputCfg['startproj'] == 'all'): 
@@ -57,7 +55,6 @@ for plot in cfg:
                         startBin = inputCfg['startproj']
                     if(inputCfg['endproj'] == 'all'): 
                         endBin = inObj.GetXaxis().GetNbins()
-                        print('End bin: ' + str(endBin))
                     else: 
                         startBin = inputCfg['endproj']
                     inObjProj = inObj.ProjectionX(inputCfg['name'] + "_px_" + str(inputCfg['startproj']) + str(inputCfg['endproj']),
@@ -71,10 +68,8 @@ for plot in cfg:
                         startBin = inputCfg['startproj']
                     if(inputCfg['endproj'] == 'all'): 
                         endBin = inObj.GetXaxis().GetNbins()
-                        print('End bin: ' + str(endBin))
                     else: 
                         startBin = inputCfg['endproj']
-                    print(type(inObj))
                     inObjProj = inObj.ProjectionY(inputCfg['name'] + "_py_" + str(inputCfg['startproj']) + str(inputCfg['endproj']),
                                                   startBin, endBin)
                     inObj = inObjProj

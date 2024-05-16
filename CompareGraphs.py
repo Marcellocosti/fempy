@@ -46,15 +46,38 @@ for plot in cfg:
             inObj = ChangeUnits(inObj, inputCfg['changeunits'])
         
         if isinstance(inObj, TH2):
+            print(type(inObj))
             inObj.SetDirectory(0)
+            print(type(inObj))
             if('projX' in inputCfg):
-                inObjProj = inObj.ProjectionX(inputCfg['name'] + "_py_" + str(inputCfg['startproj']) + str(inputCfg['endproj']),
-                                              inputCfg['startproj'], inputCfg['endproj'])
-                inObj = inObjProj
+                if(inputCfg['projX']):
+                    if(inputCfg['startproj'] == 'all'): 
+                        startBin = 1
+                    else: 
+                        startBin = inputCfg['startproj']
+                    if(inputCfg['endproj'] == 'all'): 
+                        endBin = inObj.GetXaxis().GetNbins()
+                        print('End bin: ' + str(endBin))
+                    else: 
+                        startBin = inputCfg['endproj']
+                    inObjProj = inObj.ProjectionX(inputCfg['name'] + "_px_" + str(inputCfg['startproj']) + str(inputCfg['endproj']),
+                                                  startBin, endBin)
+                    inObj = inObjProj
             if('projY' in inputCfg):
-                inObjProj = inObj.ProjectionY(inputCfg['name'] + "_py_" + str(inputCfg['startproj']) + str(inputCfg['endproj']),
-                                              inputCfg['startproj'], inputCfg['endproj'])
-                inObj = inObjProj
+                if(inputCfg['projY']):
+                    if(inputCfg['startproj'] == 'all'): 
+                        startBin = 1
+                    else: 
+                        startBin = inputCfg['startproj']
+                    if(inputCfg['endproj'] == 'all'): 
+                        endBin = inObj.GetXaxis().GetNbins()
+                        print('End bin: ' + str(endBin))
+                    else: 
+                        startBin = inputCfg['endproj']
+                    print(type(inObj))
+                    inObjProj = inObj.ProjectionY(inputCfg['name'] + "_py_" + str(inputCfg['startproj']) + str(inputCfg['endproj']),
+                                                  startBin, endBin)
+                    inObj = inObjProj
             inObj.Rebin(inputCfg['rebin'])
         
         if isinstance(inObj, TH1):

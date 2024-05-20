@@ -25,6 +25,8 @@ double Spline3(double *x, double *par);
 double Spline3Range(double *x, double *par);
 double PowerLaw(double *x, double *par);
 double FlatPol3(double *x, double *par);
+double FlatPol4(double *x, double *par);
+double FlatPol5(double *x, double *par);
 double FlatPol3PowLaw(double *x, double *par);
 double Pol3PowLaw(double *x, double *par);
 double Pol4PowLaw(double *x, double *par);
@@ -54,6 +56,8 @@ std::map<TString, std::tuple<double (*)(double *x, double *par), int>> functions
     {"spline3range", {Spline3Range, 20}},
     {"powerlaw", {PowerLaw, 7}},
     {"flatpol3", {FlatPol3, 5}},
+    {"flatpol4", {FlatPol4, 6}},
+    {"flatpol5", {FlatPol5, 7}},
     {"flatpol3powlaw", {FlatPol3PowLaw, 6}},
     {"pol3powlaw", {Pol3PowLaw, 5}},
     {"pol4powlaw", {Pol4PowLaw, 6}},
@@ -82,6 +86,14 @@ double Pol5(double *x, double *par) { return Pol4(x, par) + par[5] * pow(x[0], 5
 
 double FlatPol3(double *x, double *par) { 
     return 1 + par[4] * (Pol3(x, par) - 1); 
+}
+
+double FlatPol4(double *x, double *par) { 
+    return 1 + par[5] * (Pol4(x, par) - 1); 
+}
+
+double FlatPol5(double *x, double *par) { 
+    return 1 + par[6] * (Pol5(x, par) - 1); 
 }
 
 double FlatPol3PowLaw(double *x, double *par) { 

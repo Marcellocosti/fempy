@@ -79,10 +79,6 @@ for plot in cfg:
             inObj.SetDirectory(0)
             inObj.Rebin(inputCfg['rebin'])
 
-            if not inObjs:
-                drawTF1low = inObj.GetBinCenter(1)
-                drawTF1upp = inObj.GetBinCenter(inObj.GetNbinsX())
-
             if inputCfg['normalize']:
                 inObj.Scale(1./inObj.Integral())
             if inputCfg['normalizecf']:

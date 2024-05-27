@@ -7,10 +7,9 @@
 #include <stdexcept>
 
 #include "TF1.h"
-#include "TFitResult.h"
 #include "TH1.h"
+#include "TFitResult.h"
 #include "TMath.h"
-#include "TLegend.h"
 #include "TFitResultPtr.h"
 #include "FitFunctions.cxx"
 
@@ -128,7 +127,6 @@ class CorrelationFitter {
     void Add(TString name, TH1* hist, std::vector<std::tuple<std::string, double, double, double>> pars, std::string addmode) {
         TH1D *splineHisto = static_cast<TH1D*>(hist);
         TSpline3* sp3 = new TSpline3(hist);
-        
         this->Add(name, sp3, pars, addmode);
     }
 

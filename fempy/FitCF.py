@@ -11,7 +11,7 @@ import os
 import argparse
 import yaml
 
-from ROOT import TFile, TCanvas, gInterpreter, TH1, TH1D
+from ROOT import TFile, TCanvas, gInterpreter, TH1, TH1D, TSpline3
 
 from fempy import logger as log
 from fempy.utils.io import Load
@@ -113,6 +113,12 @@ for iFit, fitcf in enumerate(cfg['fitcfs']):
     # for loop over the functions entering in the model
     for iTerm, term in enumerate(fitcf['model']):
         
+        legLabels.append(term['legentry'])
+        onBaseline.append(term.get('onbaseline', 0))
+        shifts.append(term.get('shift', 0))
+        multNorm.append(term.get('multnorm', 0))
+        multGlobNorm.append(term.get('multglobnorm', 0))
+
         if term.get('subcomps'):
             saveSubComps.append(iTerm-1)
             normsSubComps.append(term['normssubcomps'])
@@ -126,12 +132,6 @@ for iFit, fitcf in enumerate(cfg['fitcfs']):
                 shifts.append(term.get('sub_shifts', [0.]*len(term['subcomps']))[iSubComp])
                 multNorm.append(term.get('sub_multnorm', [1]*len(term['subcomps']))[iSubComp])
                 multGlobNorm.append(term.get('sub_multglobnorm', [1]*len(term['subcomps']))[iSubComp])
-        
-        onBaseline.append(term['onbaseline'])
-        legLabels.append(term['legentry'])
-        shifts.append(term.get('shift', 0))
-        multNorm.append(term.get('multnorm', 1))
-        multGlobNorm.append(term.get('multglobnorm', 1))
 
         if term.get('isbaseline'):
             drawFits[-1].SetBasIdx(iTerm)
@@ -141,7 +141,6 @@ for iFit, fitcf in enumerate(cfg['fitcfs']):
             drawFits[-1].AddFitCompName(term['template'])
             templFile = TFile(term['templfile'])
             splinedTempl = Load(templFile, term['templpath'])
-            drawFits[-1].AddSplineHisto(splinedTempl)
             if(isinstance(splinedTempl, TH1)):
                 splinedTempl = ChangeUnits(splinedTempl, 1000)
                 if term.get('rebin'):
@@ -151,6 +150,7 @@ for iFit, fitcf in enumerate(cfg['fitcfs']):
             modelFitters[-1].Add(term['template'], splinedTempl, initPars, term['addmode'])
             cSplinedTempl = TCanvas(f'c{term["template"]}', '', 600, 600)
             modelFitters[-1].DrawSpline(cSplinedTempl, splinedTempl)
+            drawFits[-1].AddSplineHisto(splinedTempl)
             oFile.cd(fitcf['fitname'])
             cSplinedTempl.Write()
         

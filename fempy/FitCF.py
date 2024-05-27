@@ -12,9 +12,6 @@ import argparse
 import yaml
 
 from ROOT import TFile, TCanvas, gInterpreter, TH1, TH1D
-gInterpreter.ProcessLine(f'#include "{os.environ.get("FEMPY")}fempy/CorrelationFitter.hxx"')
-gInterpreter.ProcessLine(f'#include "{os.environ.get("FEMPY")}fempy/DrawFitFuncts.hxx"')
-from ROOT import CorrelationFitter, DrawFitFuncts
 
 from fempy import logger as log
 from fempy.utils.io import Load
@@ -26,7 +23,12 @@ parser.add_argument('--debug', default=False, action='store_true')
 args = parser.parse_args()
 
 if args.debug:
+    gInterpreter.ProcessLine(f'#define LOG_LEVEL 1')
     log.setLevel(1)
+
+gInterpreter.ProcessLine(f'#include "{os.environ.get("FEMPY")}fempy/CorrelationFitter.hxx"')
+gInterpreter.ProcessLine(f'#include "{os.environ.get("FEMPY")}fempy/DrawFitFuncts.hxx"')
+from ROOT import CorrelationFitter, DrawFitFuncts
 
 # Load yaml file
 with open(args.cfg, "r") as stream:
@@ -68,13 +70,13 @@ for iFit, fitcf in enumerate(cfg['fitcfs']):
     
     # change unity of measure of histograms from GeV to MeV
     fitHisto = ChangeUnits(Load(inFileFit, fitcf['cfpath']), 1000)
-    if('rebin' in fitcf):
+    if fitcf.get('rebin'):
         fitHisto.Rebin(fitcf['rebin'])
 
     # fit range
     lowFitRange = fitcf['fitrange'][0]
     uppFitRange = fitcf['fitrange'][1]
-    if('rejectrange' in fitcf):
+    if fitcf.get('rejectrange'):
         lowRejectRange = fitcf['rejectrange'][0]
         uppRejectRange = fitcf['rejectrange'][1]
         modelFitters.append(CorrelationFitter(fitHisto, lowFitRange, uppFitRange, lowRejectRange, uppRejectRange))
@@ -82,7 +84,7 @@ for iFit, fitcf in enumerate(cfg['fitcfs']):
         modelFitters.append(CorrelationFitter(fitHisto, lowFitRange, uppFitRange))
         
     # drawing class constructor
-    if('drawrange' in fitcf):
+    if fitcf.get('drawrange'):
         lowDrawRange = fitcf['drawrange'][0]
         uppDrawRange = fitcf['drawrange'][1]
         drawFits.append(DrawFitFuncts(fitHisto, lowDrawRange, uppDrawRange))
@@ -103,6 +105,7 @@ for iFit, fitcf in enumerate(cfg['fitcfs']):
     saveSubComps = []
     normsSubComps = []
     normsSubCompsLabels = []
+    subCompsMothers = []
     subComps = []
     legLabels = []
     legLabels.append(fitcf['datalabel'])
@@ -110,13 +113,14 @@ for iFit, fitcf in enumerate(cfg['fitcfs']):
     # for loop over the functions entering in the model
     for iTerm, term in enumerate(fitcf['model']):
         
-        if('subcomps' in term):
+        if term.get('subcomps'):
             saveSubComps.append(iTerm-1)
             normsSubComps.append(term['normssubcomps'])
             normsSubCompsLabels.append(term['normssubcompslabels'])
+            subCompsMothers.append(term['func'])
             subComps.append(term['subcomps'])
-            print('Reading subcomps!')
             for iSubComp in range(len(term['subcomps'])):
+                print('Reading subcomps!')
                 onBaseline.append(term['sub_onbaseline'][iSubComp])                
                 legLabels.append(term['sub_legentry'][iSubComp])
                 shifts.append(term.get('sub_shifts', [0.]*len(term['subcomps']))[iSubComp])
@@ -125,22 +129,22 @@ for iFit, fitcf in enumerate(cfg['fitcfs']):
         
         onBaseline.append(term['onbaseline'])
         legLabels.append(term['legentry'])
-        shifts.append(term.get('shift', 0.))
+        shifts.append(term.get('shift', 0))
         multNorm.append(term.get('multnorm', 1))
         multGlobNorm.append(term.get('multglobnorm', 1))
 
-        if('isbaseline' in term):
+        if term.get('isbaseline'):
             drawFits[-1].SetBasIdx(iTerm)
             baselineIdx = iTerm
                 
-        if('template' in term):
+        if term.get('template'):
             drawFits[-1].AddFitCompName(term['template'])
             templFile = TFile(term['templfile'])
             splinedTempl = Load(templFile, term['templpath'])
             drawFits[-1].AddSplineHisto(splinedTempl)
             if(isinstance(splinedTempl, TH1)):
                 splinedTempl = ChangeUnits(splinedTempl, 1000)
-                if('rebin' in term):
+                if term.get('rebin'):
                     splinedTempl.Rebin(term['rebin'])
             initPars = [(key, term['params'][key][0], term['params'][key][1], 
                          term['params'][key][2]) for key in term['params']]    
@@ -150,7 +154,7 @@ for iFit, fitcf in enumerate(cfg['fitcfs']):
             oFile.cd(fitcf['fitname'])
             cSplinedTempl.Write()
         
-        elif('spline' in term):
+        elif term.get('spline'):
             drawFits[-1].AddFitCompName(term['spline'])
             histoFile = TFile(term['histofile'])
             toBeSplinedHisto = ChangeUnits(Load(histoFile, term['histopath']), term['changeunits'])
@@ -167,13 +171,13 @@ for iFit, fitcf in enumerate(cfg['fitcfs']):
                 initPars.append([f'yKnot{nKnot}', yKnot, yKnot - (yKnot/100)*term['yboundperc'], yKnot + (yKnot/100)*term['yboundperc']])
             modelFitters[-1].Add(term['spline'], initPars, term['addmode'])
         
-        elif('func' in term):
+        elif term.get('func'):
             drawFits[-1].AddFitCompName(term['func'])
-            if('subcomps' in term):
+            if term.get('subcomps'):
                 for iSubComp in range(len(term['subcomps'])):
                     drawFits[-1].AddFitCompName(term['subcomps'][iSubComp])
 
-            if('fixparsfromfuncts' in term):
+            if term.get('fixparsfromfuncts'):
                 histoFuncFiles = []
                 histoFuncHistoPars = []
                 for histoFuncFile, histoFuncHistoParsPath in zip(term['histofuncfile'], term['histofuncpath']):
@@ -182,7 +186,7 @@ for iFit, fitcf in enumerate(cfg['fitcfs']):
 
             initPars = []
             for key in term['params']:
-                if("fromfunct" == term['params'][key][0]):
+                if "fromfunct" == term['params'][key][0]:
                     initPars.append((key, histoFuncHistoPars[term['params'][key][1]].GetBinContent(term['params'][key][2]), 0, -1))
                 else:
                     initPars.append((key, term['params'][key][0], term['params'][key][1], 
@@ -191,7 +195,7 @@ for iFit, fitcf in enumerate(cfg['fitcfs']):
             modelFitters[-1].Add(term['func'], initPars, term['addmode'])
                 
     # perform the fit and save the result
-    if('globnorm' in fitcf):
+    if fitcf.get('globnorm'):
         modelFitters[-1].AddGlobNorm('globnorm', fitcf['globnorm'][0], fitcf['globnorm'][1], fitcf['globnorm'][2])    
         drawFits[-1].SetGlobNorm(True)    
     
@@ -207,15 +211,15 @@ for iFit, fitcf in enumerate(cfg['fitcfs']):
     modelFitters[-1].SaveFreeFixPars().Write()
     modelFitters[-1].SaveFitPars().Write()
     modelFitters[-1].PullDistribution().Write()
-    if('isfitcf' in fitcf):
+    if fitcf.get('isfitcf'):
         modelFitters[-1].SaveScatPars().Write()
 
-    hAllCompsParHisto = modelFitters[-1].SaveFitParsSplitComponents(saveSubComps, normsSubComps, subComps, normsSubCompsLabels)
+    hAllCompsParHisto = modelFitters[-1].SaveFitParsSplitComponents(subCompsMothers, saveSubComps, normsSubComps, subComps, normsSubCompsLabels)
     hAllCompsParHisto.Write()    
     cFit = TCanvas('cFit', '', 600, 600)
     drawFits[-1].SetTotalFitFunc(fitFunction)
     drawFits[-1].SetParHist(hAllCompsParHisto)
-    if('drawsumcomps' in fitcf):
+    if fitcf.get('drawsumcomps'):
         drawFits[-1].EvaluateToBeDrawnComponents(onBaseline, multNorm, multGlobNorm, shifts,
                                              baselineIdx, fitcf['drawsumcomps'])
     else:        
@@ -223,9 +227,6 @@ for iFit, fitcf in enumerate(cfg['fitcfs']):
                                              baselineIdx)
     
     drawFits[-1].Draw(cFit, legLabels, fitcf['legcoords'], linesThickness)
-    
-    if('debug' in fitcf):
-        modelFitters[-1].Debug()
         
     cFit.Write()
 

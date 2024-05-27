@@ -346,14 +346,3 @@ double ComplexLednicky_Singlet_doublegaussian_lambda(double *x, double *par)
     return sourcePar3 * (sourcePar2 * GeneralLednicky(kStar, sourcePar0, ScatLen, potPar2) 
            + (1 - sourcePar2) * GeneralLednicky(kStar, sourcePar1, ScatLen, potPar2)) + 1. - sourcePar3;
 }
-
-// std::tuple<double (*)(double *x, double *par), int> getValueFromMap(TString key) {
-//     return functions[key];
-// }
-
-// // Python module definition
-// using namespace boost::python;
-// BOOST_PYTHON_MODULE(FunctionMap) {
-//     // Expose the functions to Python
-//     def("get_function", getValueFromMap);
-// }

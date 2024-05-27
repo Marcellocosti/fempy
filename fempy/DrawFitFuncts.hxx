@@ -17,6 +17,12 @@
 #include "THashList.h"
 #include "TFitResultPtr.h"
 
+#if LOG_LEVEL
+#define DEBUG(msg) std::cout << msg << std::endl
+#else
+#define DEBUG(msg)
+#endif
+
 class DrawFitFuncts {
    public:
     DrawFitFuncts(TH1 *fithist, double drawRangeMin, double drawRangeMax, 
@@ -71,10 +77,10 @@ class DrawFitFuncts {
             std::cerr << "Warning: multglobnorm status not defined for all components!" << std::endl;
         }
 
-        cout << "Number of parameters in the histogram: " << this->fParHist->GetNbinsX() << endl;
-        cout << "Number of components to be drawn: " << this->fFitFuncComps.size() << endl;
+        DEBUG("Total number of parameters with subcomponents: " << this->fParHist->GetNbinsX());
+        DEBUG("Number of components to be drawn: " << this->fFitFuncComps.size());
         for(int iFunc=0; iFunc<this->fFitFuncComps.size(); iFunc++) {
-            cout << "Component " << this->fFitFuncComps[iFunc] << endl; 
+            DEBUG("Component " << this->fFitFuncComps[iFunc]); 
         }
         // Evaluate the single fit components alone
         int startPar=0;
@@ -91,49 +97,51 @@ class DrawFitFuncts {
                             (double *x, double *pars) {
                             return rawSplineComps.back()->Eval(x[0] - pars[0]);}, 
                             this->fDrawRangeMin, this->fDrawRangeMax, 1));
-                cout << "Setting spline shift of " << this->fFitFuncComps[iFunc] << " to " << 
-                        this->fParHist->GetXaxis()->GetLabels()->At(startPar+iFunc+1)->GetName() << endl; 
-                cout << "Bin content: " << this->fParHist->GetBinContent(startPar+iFunc+2) << endl;
+                DEBUG("Set spline shift to " << 
+                      this->fParHist->GetBinContent(startPar+iFunc+2); 
+                      cout << ", content of bin no. " << startPar+iFunc+2;
+                      cout << ", label " << this->fParHist->GetXaxis()->GetLabels()->At(startPar+iFunc+1)->GetName());
                 rawComps.back()->FixParameter(0, this->fParHist->GetBinContent(startPar+iFunc+2));
-                startPar += 1; // 1 + 1
+                startPar += 1; 
                 iSpline++;
             } else {
                 nParsComps.push_back(std::get<1>(functions[this->fFitFuncComps[iFunc]]));
                 rawComps.push_back(new TF1(this->fFitFuncComps[iFunc], std::get<0>(functions[this->fFitFuncComps[iFunc]]), 
                                            fDrawRangeMin, fDrawRangeMax, std::get<1>(functions[this->fFitFuncComps[iFunc]])));
+                DEBUG("--------------------------------");
+                DEBUG("Set pars of comp " << iFunc << ", named " << this->fFitFuncComps[iFunc] << ", having " << rawComps.back()->GetNpar() << " parameters" << endl; 
+                      cout << "StartPar: " << startPar);
                 for(int iPar=0; iPar<rawComps.back()->GetNpar(); iPar++) {
-                    // cout << hist->GetXaxis()->GetLabels()->At(bin-1)->GetName() << endl;
-                    cout << "Setting par n. " << iPar << " of " << this->fFitFuncComps[iFunc] << " to " << 
-                            this->fParHist->GetXaxis()->GetLabels()->At(startPar+iFunc+iPar+1+this->fGlobNorm)->GetName() << endl; 
-                    // cout << "Setting par n. " << iPar << "of " << this->fFitFuncComps[iFunc] << " to " << this->fParHist->GetBinContent(startPar+iFunc+iPar) << endl; 
-                    cout << "StartPar: " << startPar << endl;
-                    cout << "iFunc: " << iFunc << endl;
-                    cout << "iPar: " << iPar << endl;
-                    cout << "Bin number: " << startPar+iFunc+iPar+1 << endl;
-                    cout << "Bin content: " << this->fParHist->GetBinContent(startPar+iFunc+iPar+2+this->fGlobNorm) << endl;
-                    cout << endl;
+                    DEBUG("Set par n. " << iPar << " to " << this->fParHist->GetXaxis()->GetLabels()->At(startPar+iFunc+iPar+1+this->fGlobNorm)->GetName(); 
+                          cout << ", bin no. " << startPar+iFunc+iPar+1 << " bin content: " << this->fParHist->GetBinContent(startPar+iFunc+iPar+2+this->fGlobNorm));
                     rawComps.back()->FixParameter(iPar, this->fParHist->GetBinContent(startPar+iFunc+iPar+2+this->fGlobNorm));
                 }
-                cout << "startPar: " << startPar << endl;
                 startPar += std::get<1>(functions[this->fFitFuncComps[iFunc]]);
+                DEBUG("--------------------------------");
             }
-            cout << endl;
         }
 
         // save the normalization constant for which each component has to be multiplied when drawing
         std::vector<double> norms;
+        DEBUG("--------------------------------");
+        std::cout << std::showpos;
+        cout.precision(4);
+        std::cout << std::scientific;
         for(int iFunc=0; iFunc<this->fFitFuncComps.size(); iFunc++) {
             if(multNorm[iFunc]) {
                 int normIdx = accumulate(nParsComps.begin(), std::next(nParsComps.begin(), iFunc), 0) + iFunc + this->fGlobNorm;
-                cout << "Norm index " << normIdx << endl;
-                cout << "Setting component norm to: " << this->fParHist->GetXaxis()->GetLabels()->At(normIdx)->GetName();
-                cout << " , value: " << this->fParHist->GetBinContent(normIdx+1) << endl;
+                DEBUG("Set component " + std::to_string(iFunc) + " norm to: ";
+                cout << this->fParHist->GetXaxis()->GetLabels()->At(normIdx)->GetName() << ", val: ";
+                cout << this->fParHist->GetBinContent(normIdx+1) << ", norm idx: ";
+                cout << std::to_string(normIdx));
                 norms.push_back(this->fParHist->GetBinContent(normIdx+1));
             } else {
-                cout << "Setting component norm to 1" << endl;
+                DEBUG("Set component norm to 1");
                 norms.push_back(1.);
             }
         } 
+        DEBUG("--------------------------------");
+        std::cout << std::noshowpos;
 
         // append to the raw components vector the functions that are sum of more than one component
         if(addComps[0] != "") {
@@ -198,9 +206,10 @@ class DrawFitFuncts {
         // Define the baseline with its norm, if not indicated it is set to 1
         double basNorm;
         TF1 *bas = nullptr;
+        DEBUG("--------------------------------");
         if(basIdx != -1) {
             int previousCompsPars = accumulate(nParsComps.begin(), std::next(nParsComps.begin(), basIdx), 0) + basIdx;
-            cout << "Setting baseline norm to: " << this->fParHist->GetBinContent(previousCompsPars + this->fGlobNorm + 1) << endl;
+            DEBUG("Set baseline norm for function to: " << this->fParHist->GetBinContent(previousCompsPars + this->fGlobNorm + 1));
             basNorm = this->fParHist->GetBinContent(previousCompsPars + this->fGlobNorm + 1);
             bas = new TF1(this->fFitFuncComps[basIdx],
                 [&, this, rawComps, multNorm, multGlobNorm, basIdx]
@@ -215,34 +224,38 @@ class DrawFitFuncts {
                        return 1.0000;
                     }, this->fDrawRangeMin, this->fDrawRangeMax, 0);
         }
+        DEBUG("--------------------------------");
 
         // Define the weight of the baseline for each component, if it specified not to draw the component
         // on the baseline it will be set to zero 
         std::vector<double> onBasNorms;
+        DEBUG("--------------------------------");
         for(int iFunc=0; iFunc<this->fFitFuncComps.size(); iFunc++) {
             if(onBaseline[iFunc]) {
-                cout << "Setting norm of the baseline to: " << basNorm << endl;
+                DEBUG("Set norm of the baseline for function " << iFunc << " to: " << basNorm);
                 onBasNorms.push_back(basNorm);
             } else {
-                cout << "Setting norm of the baseline to 0" << endl;
+                DEBUG("Set norm of the baseline for function " << iFunc << " to: " << static_cast<double>(int(0)));
                 onBasNorms.push_back(0.00000);
             }
         } 
+        DEBUG("--------------------------------");
 
         // Define the global normalization constant for which every component will be multiplied, 1 if we want 
         // to draw the component as not multiplied
         std::vector<double> globNorms;
-        cout << "Number of global norms " << multGlobNorm.size()  << endl;
+        DEBUG("--------------------------------");
+        DEBUG("Number of global norms " << multGlobNorm.size());
         for(int iFunc=0; iFunc<this->fFitFuncComps.size(); iFunc++) {
-            cout << "Component number " << iFunc << endl;
             if(multGlobNorm[iFunc]) {
-                cout << "Setting global norm to: " << this->fGlobNorm << endl;
+                DEBUG("Set global norm for function " << iFunc << " to: " << this->fGlobNorm);
                 globNorms.push_back(this->fGlobNorm);
             } else {
-                cout << "Setting global norm to 1" << endl;
+                DEBUG("Set global norm for function " << iFunc << " to 1");
                 globNorms.push_back(1.);
             }
         } 
+        DEBUG("--------------------------------");
 
         // Define the final functions that will be drawn on the canvas
         for(int iRawComp=0; iRawComp<rawComps.size(); iRawComp++) {
@@ -252,35 +265,8 @@ class DrawFitFuncts {
                    return globNorms[iRawComp] * (norms[iRawComp]*rawComps[iRawComp]->Eval(x[0]) + onBasNorms[iRawComp]*bas->Eval(x[0]));  
                 }, this->fDrawRangeMin, this->fDrawRangeMax, 0));
         }
-        cout << "Raw components defined!" << endl;
+        DEBUG("Raw components defined!");
 
-        // Debug couts
-        if(debug) {
-            cout << "Norms: " << endl;
-            cout << "[";
-            for(int iNorm=0; iNorm<norms.size(); iNorm++) {
-                if(iNorm<norms.size()-1) cout << norms[iNorm] << ", ";
-                else cout << norms[iNorm];
-            }
-            cout << "]" << endl;
-            cout << endl;
-            cout << "onBasNorms: " << endl;
-            cout << "[";
-            for(int iOnBasNorm=0; iOnBasNorm<onBasNorms.size(); iOnBasNorm++) {
-                if(iOnBasNorm<onBasNorms.size()-1) cout << onBasNorms[iOnBasNorm] << ", ";
-                else cout << onBasNorms[iOnBasNorm];
-            }
-            cout << "]" << endl;
-            cout << endl;
-            cout << "globNorms: " << endl;
-            cout << "[";
-            for(int iGlobNorm=0; iGlobNorm<globNorms.size(); iGlobNorm++) {
-                if(iGlobNorm<globNorms.size()-1) cout << globNorms[iGlobNorm] << ", ";
-                else cout << globNorms[iGlobNorm];
-            }
-            cout << "]" << endl;
-            cout << endl;
-        }
     }
 
     /*
@@ -301,18 +287,19 @@ class DrawFitFuncts {
         gPad->DrawFrame(fDrawRangeMin, yMinDraw, fDrawRangeMax, yMaxDraw, title.data());
                 
         std::vector<Color_t> colors = {kMagenta + 3, kAzure + 2, kGreen, kOrange, kBlue + 2, kCyan, kBlack, kGreen+2};
-        cout << "Number of components to be drawn: " << fDrawFuncs.size() << endl;
+        DEBUG("--------------------------------");
+        DEBUG("Number of components to be drawn: " << fDrawFuncs.size());
         for(int iFuncEval=0; iFuncEval<fDrawFuncs.size(); iFuncEval++) {
-            cout << "Drawing the component " << iFuncEval << endl;
             this->fDrawFuncs[iFuncEval]->SetNpx(300);
             this->fDrawFuncs[iFuncEval]->SetLineColor(colors[iFuncEval]); //.data());
             this->fDrawFuncs[iFuncEval]->SetLineWidth(linesThickness);
             this->fDrawFuncs[iFuncEval]->DrawF1(fDrawRangeMin+1,fDrawRangeMax,"same");
             this->fDrawFuncs[iFuncEval]->Draw("same");
-            cout << "Legend label: " << legLabels[iFuncEval+2] << endl;
+            DEBUG("Drawing the component " << iFuncEval << " with legend label: " << legLabels[iFuncEval+2]);
             if(legLabels[iFuncEval+2].Contains("lambda_flat")) continue;
             legend->AddEntry(this->fDrawFuncs[iFuncEval], legLabels[iFuncEval+2].Data(), "l");
         }
+        DEBUG("--------------------------------");
 
         this->fFit->SetNpx(300);
         this->fFit->SetLineColor(kRed);
@@ -349,7 +336,7 @@ class DrawFitFuncts {
 
     std::vector<TString> fFitFuncComps;                             // Function names of fit components
     std::vector<TF1*> fDrawFuncs;                                   // Fit components evaluated after the fitting
-    std::vector<TF1*> fRawFuncs;                                   // Fit components evaluated after the fitting
+    std::vector<TF1*> fRawFuncs;                                    // Fit components evaluated after the fitting
     std::vector<TH1*> fSplineHistos;                                // Fit components evaluated after the fitting
 
 };
